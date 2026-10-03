@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-i18n="meta.title">CTGJ — снабжение и логистика из Китая</title>
+  <meta name="description" data-i18n-content="meta.description" content="CTGJ — торгово-логистическая компания в Китае: комплексное снабжение предприятий, складская инфраструктура, аутсорсинг закупок и международная логистика.">
+  <meta name="theme-color" content="#07080f">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Manrope:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Unbounded:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="is-loading">
+
+<!-- ========== Прелоадер: дракон проплывает по экрану ========== -->
+<div class="loader" id="loader" aria-hidden="true">
+  <canvas class="loader__canvas" id="loader-canvas"></canvas>
+  <div class="loader__brand">
+    <img src="img/logo.png" alt="CTGJ" class="loader__logo">
+    <p class="loader__tagline" data-i18n="loader.tagline">Снабжение и логистика из Китая</p>
+  </div>
+  <button class="loader__skip" id="loader-skip" type="button" data-i18n="loader.skip">Пропустить</button>
+  <div class="loader__curtain loader__curtain--top"></div>
+  <div class="loader__curtain loader__curtain--bottom"></div>
+</div>
+
+<div class="progress" id="progress"></div>
+<div class="cursor" id="cursor" aria-hidden="true"></div>
+
+<!-- ========== Шапка ========== -->
+<header class="header" id="header">
+  <div class="container header__inner">
+    <a href="#top" class="header__logo" aria-label="CTGJ">
+      <img src="img/logo.png" alt="CTGJ — Cargo Trade Global Journey">
+    </a>
+
+    <nav class="nav" id="nav">
+      <a href="#about" class="nav__link"><span class="nav__num">01</span><span data-i18n="nav.about">О компании</span></a>
+      <a href="#services" class="nav__link"><span class="nav__num">02</span><span data-i18n="nav.services">Услуги</span></a>
+      <a href="#projects" class="nav__link"><span class="nav__num">03</span><span data-i18n="nav.projects">Проекты</span></a>
+      <a href="#contacts" class="nav__link"><span class="nav__num">04</span><span data-i18n="nav.contacts">Контакты</span></a>
+    </nav>
+
+    <div class="header__right">
+      <div class="langs" role="group" aria-label="Language">
+        <button class="lang" type="button" data-lang="ru" aria-label="Русский" title="Русский">
+          <svg viewBox="0 0 30 20"><rect width="30" height="20" fill="#fff"/><rect y="6.67" width="30" height="6.67" fill="#1c57a5"/><rect y="13.33" width="30" height="6.67" fill="#d52b1e"/></svg>
+        </button>
+        <button class="lang" type="button" data-lang="en" aria-label="English" title="English">
+          <svg viewBox="0 0 60 40"><rect width="60" height="40" fill="#012169"/><path d="M0 0l60 40M60 0L0 40" stroke="#fff" stroke-width="8"/><path d="M0 0l60 40M60 0L0 40" stroke="#c8102e" stroke-width="3"/><path d="M30 0v40M0 20h60" stroke="#fff" stroke-width="12"/><path d="M30 0v40M0 20h60" stroke="#c8102e" stroke-width="7"/></svg>
+        </button>
+        <button class="lang" type="button" data-lang="zh" aria-label="中文" title="中文">
+          <svg viewBox="0 0 30 20"><rect width="30" height="20" fill="#de2910"/><g fill="#ffde00"><path d="M5 2.2l.9 2.8h2.9l-2.4 1.7.9 2.8L5 7.8 2.7 9.5l.9-2.8-2.4-1.7h2.9z"/><circle cx="10" cy="2" r=".8"/><circle cx="12" cy="4" r=".8"/><circle cx="12" cy="7" r=".8"/><circle cx="10" cy="9" r=".8"/></g></svg>
+        </button>
+      </div>
+      <button class="btn btn--sm btn--red header__cta" type="button" data-open-request data-i18n="cta.request">Оставить заявку</button>
+      <button class="burger" id="burger" type="button" aria-label="Меню" aria-expanded="false" aria-controls="nav">
+        <span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ========== Первый экран ========== -->
+  <section class="hero" id="hero">
+    <!-- фоновое видео: src подставляется в main.js (лёгкая версия для телефонов) -->
+    <video class="hero__video" id="hero-video" muted loop playsinline preload="none" poster="video/hero-poster.jpg" aria-hidden="true" tabindex="-1"></video>
+    <div class="hero__shade" aria-hidden="true"></div>
+    <canvas class="hero__canvas" id="hero-canvas"></canvas>
+    <div class="hero__skyline" data-parallax="0.15"><img src="img/skyline.svg" alt=""></div>
+
+    <div class="hanging hanging--left" aria-hidden="true"><div class="mini-lantern"><span>福</span></div></div>
+    <div class="hanging hanging--right" aria-hidden="true"><div class="mini-lantern"><span>运</span></div></div>
+
+    <div class="container hero__inner">
+      <div class="hero__badge" data-hero>
+        <span class="seal">中国</span>
+        <span data-i18n="hero.badge">Компания в Китае</span>
+      </div>
+      <h1 class="hero__title" data-hero data-i18n-html="hero.title_html">Снабжение <br>и логистика <span class="accent">из&nbsp;Китая</span></h1>
+      <p class="hero__text" data-hero data-i18n="hero.text">Находим и проверяем производителей, поставляем оборудование, сырьё и материалы. Одна команда ведёт проект от технического задания до результата.</p>
+      <div class="hero__actions" data-hero>
+        <button class="btn btn--red" type="button" data-open-request data-magnetic>
+          <span data-i18n="cta.request">Оставить заявку</span>
+          <svg class="btn__icon" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <a class="btn btn--ghost" href="#services" data-magnetic data-i18n="hero.btnServices">Наши услуги</a>
+      </div>
+
+      <ul class="hero__stats" data-hero>
+        <li><b>4</b><span data-i18n="hero.s1">направления услуг</span></li>
+        <li><b>1</b><span data-i18n="hero.s2">команда на весь цикл поставки</span></li>
+        <li><b>3</b><span data-i18n="hero.s3">языка: RU · EN · 中文</span></li>
+      </ul>
+    </div>
+
+    <div class="hero__vertical" aria-hidden="true">中国物流</div>
+    <a href="#about" class="hero__scroll"><span data-i18n="hero.scroll">Листайте</span><i></i></a>
+  </section>
+
+  <!-- ========== Бегущая строка ========== -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee__track" id="marquee"></div>
+  </div>
+
+  <!-- ========== 01 О компании ========== -->
+  <section class="section about" id="about">
+    <div class="container">
+      <div class="section__head">
+        <span class="section__num"><i>一</i>01</span>
+        <span class="section__label" data-i18n="about.label">О компании</span>
+      </div>
+
+      <div class="about__grid">
+        <h2 class="h2" data-split data-i18n="about.title">Превращаем задачу клиента в чётко выстроенный процесс</h2>
+        <div class="about__text">
+          <p class="lead" data-reveal data-i18n-html="about.p1_html"><b>CTGJ</b> — торгово-логистическая компания, специализирующаяся на комплексном снабжении предприятий и компаний, а также организации международной логистики из Китая.</p>
+          <p data-reveal data-i18n="about.p2">Каждую поставленную клиентом задачу мы превращаем в чётко выстроенный и управляемый процесс, сопровождая проект на всём пути — от первоначального технического задания до достижения необходимого результата.</p>
+          <p data-reveal data-i18n="about.p3">Наша работа включает поиск и проверку производителей, поставку промышленного оборудования и технологических линий, химических реагентов, сырья и других материалов, необходимых для производственной деятельности.</p>
+          <p data-reveal data-i18n="about.p4">Все этапы объединены в единую систему и находятся под контролем одной команды. Это позволяет сократить количество посредников, снизить риски, сделать ход поставки понятным, а сроки и расходы — прогнозируемыми.</p>
+        </div>
+      </div>
+
+      <ul class="adv">
+        <li class="adv__item" data-reveal><span class="adv__char">直</span><h3 data-i18n="adv.1.t">Меньше посредников</h3><p data-i18n="adv.1.d">Работаем напрямую с производителями в Китае.</p></li>
+        <li class="adv__item" data-reveal><span class="adv__char">安</span><h3 data-i18n="adv.2.t">Ниже риски</h3><p data-i18n="adv.2.d">Проверяем поставщиков до начала сделки.</p></li>
+        <li class="adv__item" data-reveal><span class="adv__char">明</span><h3 data-i18n="adv.3.t">Понятный ход поставки</h3><p data-i18n="adv.3.d">Вы знаете, на каком этапе ваш заказ.</p></li>
+        <li class="adv__item" data-reveal><span class="adv__char">准</span><h3 data-i18n="adv.4.t">Прогнозируемые сроки</h3><p data-i18n="adv.4.d">И расходы — без неожиданных доплат.</p></li>
+      </ul>
+
+      <div class="process" id="process">
+        <div class="process__head">
+          <span class="section__label" data-i18n="process.label">Как мы работаем</span>
+          <h3 class="h3" data-split data-i18n="process.title">От технического задания до результата</h3>
+        </div>
+        <ol class="process__steps">
+          <li class="step" data-reveal><span class="step__dot">一</span><b data-i18n="step.1.t">Техническое задание</b><p data-i18n="step.1.d">Фиксируем задачу, требования и сроки.</p></li>
+          <li class="step" data-reveal><span class="step__dot">二</span><b data-i18n="step.2.t">Поиск и проверка</b><p data-i18n="step.2.d">Подбираем и проверяем производителей.</p></li>
+          <li class="step" data-reveal><span class="step__dot">三</span><b data-i18n="step.3.t">Закупка</b><p data-i18n="step.3.d">Согласуем условия и контролируем производство.</p></li>
+          <li class="step" data-reveal><span class="step__dot">四</span><b data-i18n="step.4.t">Логистика</b><p data-i18n="step.4.d">Организуем международную доставку.</p></li>
+          <li class="step" data-reveal><span class="step__dot">五</span><b data-i18n="step.5.t">Результат</b><p data-i18n="step.5.d">Груз у вас — задача решена.</p></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 02 Услуги: поворотные фонари-шары ========== -->
+  <section class="section services" id="services">
+    <div class="services__glow" aria-hidden="true"></div>
+    <div class="container">
+      <div class="section__head">
+        <span class="section__num"><i>二</i>02</span>
+        <span class="section__label" data-i18n="services.label">Услуги</span>
+      </div>
+      <h2 class="h2 h2--center" data-split data-i18n="services.title">Четыре направления — одна команда</h2>
+      <p class="services__hint" data-reveal data-i18n="services.hint">Наведите на фонарь или нажмите на него, чтобы узнать подробнее</p>
+
+      <div class="lanterns">
+        <article class="lantern" data-reveal tabindex="0">
+          <div class="lantern__sway">
+            <div class="lantern__string"></div>
+            <div class="lantern__flip">
+              <div class="lantern__face lantern__face--front">
+                <div class="lantern__cap lantern__cap--top"></div>
+                <div class="lantern__ball"><i class="rib r1"></i><i class="rib r2"></i><i class="rib r3"></i><span class="lantern__char">供</span><span class="lantern__num">01</span></div>
+                <div class="lantern__cap lantern__cap--bottom"></div>
+                <div class="lantern__tassel"></div>
+              </div>
+              <div class="lantern__face lantern__face--back">
+                <div class="lantern__ball lantern__ball--back">
+                  <p data-i18n="svc.1.d">Берём на себя снабжение производства: оборудование, технологические линии, химические реагенты, сырьё и материалы — по единому ТЗ.</p>
+                  <button class="btn btn--xs btn--gold" type="button" data-open-request data-service="supply" data-i18n="svc.order">Заявка</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <h3 class="lantern__title" data-i18n="svc.1.t">Комплексное обеспечение предприятий и компаний</h3>
+        </article>
+
+        <article class="lantern" data-reveal tabindex="0">
+          <div class="lantern__sway">
+            <div class="lantern__string"></div>
+            <div class="lantern__flip">
+              <div class="lantern__face lantern__face--front">
+                <div class="lantern__cap lantern__cap--top"></div>
+                <div class="lantern__ball"><i class="rib r1"></i><i class="rib r2"></i><i class="rib r3"></i><span class="lantern__char">仓</span><span class="lantern__num">02</span></div>
+                <div class="lantern__cap lantern__cap--bottom"></div>
+                <div class="lantern__tassel"></div>
+              </div>
+              <div class="lantern__face lantern__face--back">
+                <div class="lantern__ball lantern__ball--back">
+                  <p data-i18n="svc.2.d">Приёмка, хранение и консолидация грузов в Китае, проверка комплектности и подготовка к отправке.</p>
+                  <button class="btn btn--xs btn--gold" type="button" data-open-request data-service="warehouse" data-i18n="svc.order">Заявка</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <h3 class="lantern__title" data-i18n="svc.2.t">Складская инфраструктура</h3>
+        </article>
+
+        <article class="lantern" data-reveal tabindex="0">
+          <div class="lantern__sway">
+            <div class="lantern__string"></div>
+            <div class="lantern__flip">
+              <div class="lantern__face lantern__face--front">
+                <div class="lantern__cap lantern__cap--top"></div>
+                <div class="lantern__ball"><i class="rib r1"></i><i class="rib r2"></i><i class="rib r3"></i><span class="lantern__char">采</span><span class="lantern__num">03</span></div>
+                <div class="lantern__cap lantern__cap--bottom"></div>
+                <div class="lantern__tassel"></div>
+              </div>
+              <div class="lantern__face lantern__face--back">
+                <div class="lantern__ball lantern__ball--back">
+                  <p data-i18n="svc.3.d">Поиск и проверка производителей, переговоры, контроль качества и сроков — без лишних посредников.</p>
+                  <button class="btn btn--xs btn--gold" type="button" data-open-request data-service="procurement" data-i18n="svc.order">Заявка</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <h3 class="lantern__title" data-i18n="svc.3.t">Аутсорсинг закупок</h3>
+        </article>
+
+        <article class="lantern" data-reveal tabindex="0">
+          <div class="lantern__sway">
+            <div class="lantern__string"></div>
+            <div class="lantern__flip">
+              <div class="lantern__face lantern__face--front">
+                <div class="lantern__cap lantern__cap--top"></div>
+                <div class="lantern__ball"><i class="rib r1"></i><i class="rib r2"></i><i class="rib r3"></i><span class="lantern__char">运</span><span class="lantern__num">04</span></div>
+                <div class="lantern__cap lantern__cap--bottom"></div>
+                <div class="lantern__tassel"></div>
+              </div>
+              <div class="lantern__face lantern__face--back">
+                <div class="lantern__ball lantern__ball--back">
+                  <p data-i18n="svc.4.d">Подбор маршрута и вида транспорта, документы и сопровождение груза до точки назначения.</p>
+                  <button class="btn btn--xs btn--gold" type="button" data-open-request data-service="logistics" data-i18n="svc.order">Заявка</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <h3 class="lantern__title" data-i18n="svc.4.t">Международная логистика</h3>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 03 Проекты: карусель со стрелками ========== -->
+  <!-- ЗАМЕНИТЬ: карточки ниже — примеры направлений. Подставьте реальные проекты заказчика. -->
+  <section class="section projects" id="projects">
+      <div class="container projects__head">
+        <div>
+          <div class="section__head">
+            <span class="section__num"><i>三</i>03</span>
+            <span class="section__label" data-i18n="projects.label">Проекты</span>
+          </div>
+          <h2 class="h2" data-split data-i18n="projects.title">Задачи, которые мы решаем</h2>
+        </div>
+        <div class="projects__side">
+          <p class="projects__text" data-i18n="projects.text">Примеры направлений, с которыми к нам приходят предприятия.</p>
+          <div class="projects__arrows">
+            <button class="arrow" type="button" id="prj-prev" aria-label="Назад" data-i18n-aria="projects.prev" disabled>
+              <svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button class="arrow" type="button" id="prj-next" aria-label="Вперёд" data-i18n-aria="projects.next">
+              <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="projects__track" id="projects-track">
+        <article class="project">
+          <span class="project__char">机</span>
+          <span class="project__num">01</span>
+          <span class="project__tag" data-i18n="prj.1.tag">Оборудование</span>
+          <h3 data-i18n="prj.1.t">Поставка технологической линии</h3>
+          <p data-i18n="prj.1.d">Подбор производителя, проверка, закупка и доставка линии под задачи производства.</p>
+        </article>
+        <article class="project project--red">
+          <span class="project__char">化</span>
+          <span class="project__num">02</span>
+          <span class="project__tag" data-i18n="prj.2.tag">Химия</span>
+          <h3 data-i18n="prj.2.t">Химические реагенты для производства</h3>
+          <p data-i18n="prj.2.d">Регулярные поставки реагентов с контролем качества и документов.</p>
+        </article>
+        <article class="project">
+          <span class="project__char">材</span>
+          <span class="project__num">03</span>
+          <span class="project__tag" data-i18n="prj.3.tag">Снабжение</span>
+          <h3 data-i18n="prj.3.t">Комплектация предприятия</h3>
+          <p data-i18n="prj.3.d">Сырьё, материалы и комплектующие по единому техническому заданию.</p>
+        </article>
+        <article class="project project--gold">
+          <span class="project__char">船</span>
+          <span class="project__num">04</span>
+          <span class="project__tag" data-i18n="prj.4.tag">Логистика</span>
+          <h3 data-i18n="prj.4.t">Консолидация и доставка груза</h3>
+          <p data-i18n="prj.4.d">Сбор товаров от разных поставщиков на складе и отправка одной партией.</p>
+        </article>
+        <article class="project project--cta">
+          <h3 data-i18n="band.title">Расскажите о задаче — мы предложим решение</h3>
+          <button class="btn btn--red" type="button" data-open-request data-i18n="band.btn">Написать нам</button>
+        </article>
+      </div>
+      <div class="container"><div class="projects__bar"><i id="prj-bar"></i></div></div>
+  </section>
+
+  <!-- ========== 04 Контакты ========== -->
+  <!-- ЗАМЕНИТЬ: контактные данные ниже — заглушки. -->
+  <section class="section contacts" id="contacts">
+    <div class="container">
+      <div class="section__head">
+        <span class="section__num"><i>四</i>04</span>
+        <span class="section__label" data-i18n="contacts.label">Контакты</span>
+      </div>
+      <div class="contacts__grid">
+        <div>
+          <h2 class="h2" data-split data-i18n="contacts.title">Свяжитесь с нами</h2>
+          <dl class="contacts__list">
+            <div data-reveal><dt data-i18n="contacts.address">Адрес</dt><dd data-i18n="contacts.addressValue">Китай, г. [город], [улица, дом]</dd></div>
+            <div data-reveal><dt data-i18n="contacts.phone">Телефон</dt><dd><a href="tel:+860000000000">+86 000 0000 0000</a></dd></div>
+            <div data-reveal><dt data-i18n="contacts.email">Email</dt><dd><a href="mailto:info@ctgj.example">info@ctgj.example</a></dd></div>
+            <div data-reveal><dt data-i18n="contacts.messengers">Мессенджеры</dt>
+              <dd class="contacts__msg">
+                <a href="#" class="chip">WeChat</a>
+                <a href="#" class="chip">WhatsApp</a>
+                <a href="#" class="chip">Telegram</a>
+              </dd>
+            </div>
+          </dl>
+        </div>
+
+        <form class="card-form js-request-form" data-reveal novalidate>
+          <h3 class="h3" data-i18n="contacts.formTitle">Быстрая заявка</h3>
+          <input type="text" name="ctgj_trap" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <label class="field"><input type="text" name="name" required autocomplete="name" placeholder=" "><span data-i18n="form.name">Имя</span></label>
+          <label class="field"><input type="text" name="phone" autocomplete="tel" placeholder=" "><span data-i18n="form.phone">Телефон / WhatsApp / WeChat</span></label>
+          <label class="field"><input type="email" name="email" autocomplete="email" placeholder=" "><span data-i18n="form.email">Email</span></label>
+          <label class="field"><textarea name="message" rows="3" placeholder=" "></textarea><span data-i18n="form.message">Сообщение</span></label>
+          <label class="check"><input type="checkbox" name="consent" required checked><span data-i18n="form.consent">Я согласен(на) на обработку персональных данных</span></label>
+          <p class="form-msg" role="status"></p>
+          <button class="btn btn--red btn--block" type="submit" data-i18n="form.submit">Отправить</button>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container footer__inner">
+    <img src="img/logo.png" alt="CTGJ" class="footer__logo">
+    <nav class="footer__nav">
+      <a href="#about" data-i18n="nav.about">О компании</a>
+      <a href="#services" data-i18n="nav.services">Услуги</a>
+      <a href="#projects" data-i18n="nav.projects">Проекты</a>
+      <a href="#contacts" data-i18n="nav.contacts">Контакты</a>
+    </nav>
+    <p class="footer__copy">© <span id="year">2026</span> CTGJ. <span data-i18n="footer.rights">Все права защищены.</span></p>
+  </div>
+</footer>
+
+<!-- ========== Кнопка «наверх» ========== -->
+<button class="to-top" id="to-top" type="button" aria-label="Наверх" data-i18n-aria="toTop">
+  <svg class="to-top__ring" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><circle class="to-top__fill" id="to-top-fill" cx="26" cy="26" r="24"/></svg>
+  <svg class="to-top__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</button>
+
+<!-- ========== Конверт сбоку ========== -->
+<button class="side-envelope" id="side-envelope" type="button" data-open-request aria-label="Оставить заявку">
+  <span class="side-envelope__env">
+    <span class="side-envelope__flap"></span>
+    <span class="side-envelope__seal">福</span>
+  </span>
+  <span class="side-envelope__label" data-i18n="envelope.label">Заявка</span>
+</button>
+
+<!-- ========== Модальное окно-конверт с формой ========== -->
+<div class="mail" id="mail" role="dialog" aria-modal="true" aria-labelledby="mail-title" hidden>
+  <div class="mail__overlay" data-close></div>
+
+  <div class="env" aria-hidden="true">
+    <div class="env__back"></div>
+    <div class="env__paper"></div>
+    <div class="env__front"></div>
+    <div class="env__flap"></div>
+    <div class="env__seal">福</div>
+  </div>
+
+  <div class="letter">
+    <button class="letter__close" type="button" data-close aria-label="Закрыть" data-i18n-aria="form.close">
+      <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <form class="js-request-form" novalidate>
+      <h2 class="letter__title" id="mail-title" data-i18n="form.title">Заявка</h2>
+      <p class="letter__sub" data-i18n="form.subtitle">Опишите задачу — менеджер свяжется с вами.</p>
+      <input type="text" name="ctgj_trap" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div class="letter__row">
+        <label class="field field--paper"><input type="text" name="name" required autocomplete="name" placeholder=" "><span data-i18n="form.name">Имя</span></label>
+        <label class="field field--paper"><input type="text" name="company" autocomplete="organization" placeholder=" "><span data-i18n="form.company">Компания</span></label>
+      </div>
+      <div class="letter__row">
+        <label class="field field--paper"><input type="text" name="phone" autocomplete="tel" placeholder=" "><span data-i18n="form.phone">Телефон / WhatsApp / WeChat</span></label>
+        <label class="field field--paper"><input type="email" name="email" autocomplete="email" placeholder=" "><span data-i18n="form.email">Email</span></label>
+      </div>
+      <label class="field field--paper field--select">
+        <select name="service">
+          <option value="supply" data-i18n="svc.1.t">Комплексное обеспечение предприятий и компаний</option>
+          <option value="warehouse" data-i18n="svc.2.t">Складская инфраструктура</option>
+          <option value="procurement" data-i18n="svc.3.t">Аутсорсинг закупок</option>
+          <option value="logistics" data-i18n="svc.4.t">Международная логистика</option>
+          <option value="other" data-i18n="form.serviceAny" selected>Другое / не знаю</option>
+        </select>
+        <span data-i18n="form.service">Услуга</span>
+      </label>
+      <label class="field field--paper"><textarea name="message" rows="3" placeholder=" "></textarea><span data-i18n="form.message">Сообщение</span></label>
+      <label class="check check--paper"><input type="checkbox" name="consent" required checked><span data-i18n="form.consent">Я согласен(на) на обработку персональных данных</span></label>
+      <p class="form-msg" role="status"></p>
+      <button class="btn btn--red btn--block" type="submit">
+        <span data-i18n="form.submit">Отправить</span>
+        <svg class="btn__icon" viewBox="0 0 24 24"><path d="M3 11l18-8-8 18-2-8-8-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      </button>
+    </form>
+    <div class="stamp" aria-hidden="true"><span data-i18n="stamp">已收到</span></div>
+    <div class="letter__done" role="status">
+      <b data-i18n="form.successTitle">Заявка отправлена</b>
+      <span data-i18n="form.successText">Спасибо! Менеджер свяжется с вами в ближайшее время.</span>
+    </div>
+  </div>
+</div>
+
+<script src="js/i18n.js"></script>
+<script src="js/dragon.js"></script>
+<script src="js/main.js" defer></script>
+</body>
+</html>

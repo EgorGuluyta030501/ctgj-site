@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>CTGJ — заявки</title>
+  <link rel="icon" href="../img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- ===== Вход ===== -->
+<section class="login" id="login" hidden>
+  <form class="login__card" id="login-form">
+    <img src="../img/logo.png" alt="CTGJ" class="login__logo">
+    <h1>Панель заявок</h1>
+    <label>Логин<input name="login" autocomplete="username" required></label>
+    <label>Пароль<input name="password" type="password" autocomplete="current-password" required></label>
+    <p class="err" id="login-err"></p>
+    <button class="btn btn--primary btn--block" type="submit">Войти</button>
+  </form>
+</section>
+
+<!-- ===== Приложение ===== -->
+<div class="app" id="app" hidden>
+  <aside class="side">
+    <img src="../img/logo.png" alt="CTGJ" class="side__logo">
+    <nav class="side__nav">
+      <button class="side__link is-active" data-view="requests">
+        <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4z M4 7l8 6 8-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        Заявки <span class="side__badge" id="badge-new" hidden></span>
+      </button>
+      <button class="side__link" data-view="users" data-admin>
+        <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M2.5 20c.5-3.5 3.2-5.5 6.5-5.5s6 2 6.5 5.5M16 4.5a3.5 3.5 0 010 7M18 14.5c2 .6 3.2 2.5 3.5 5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Менеджеры
+      </button>
+      <button class="side__link" data-view="profile">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Профиль
+      </button>
+    </nav>
+    <div class="side__user">
+      <b id="me-name"></b>
+      <span id="me-role"></span>
+      <button class="link" id="logout">Выйти</button>
+    </div>
+    <a class="side__site" href="/" target="_blank" rel="noopener">Открыть сайт ↗</a>
+  </aside>
+
+  <main class="main">
+    <!-- Заявки -->
+    <section class="view" id="view-requests">
+      <header class="main__head">
+        <h1>Заявки</h1>
+        <div class="main__tools">
+          <a class="btn btn--ghost" href="/api/admin/export.csv" data-admin>Экспорт в Excel (CSV)</a>
+          <button class="btn btn--ghost" id="refresh" title="Обновить">↻ Обновить</button>
+        </div>
+      </header>
+
+      <div class="stats" id="stats"></div>
+
+      <div class="filters">
+        <div class="chips" id="status-chips"></div>
+        <select id="f-manager" data-admin>
+          <option value="">Все менеджеры</option>
+          <option value="none">Без менеджера</option>
+        </select>
+        <input type="search" id="f-q" placeholder="Поиск: имя, телефон, email, компания, №">
+      </div>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr><th>№</th><th>Дата</th><th>Клиент</th><th>Контакты</th><th>Услуга</th><th>Статус</th><th>Менеджер</th></tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+        <p class="empty" id="empty" hidden>Заявок пока нет — они появятся здесь, как только кто-то заполнит форму на сайте.</p>
+      </div>
+    </section>
+
+    <!-- Менеджеры -->
+    <section class="view" id="view-users" hidden>
+      <header class="main__head"><h1>Менеджеры</h1></header>
+      <div class="grid2">
+        <div class="card">
+          <h2>Команда</h2>
+          <table class="table table--compact">
+            <thead><tr><th>Имя</th><th>Логин</th><th>Роль</th><th>В работе</th><th>Всего</th><th></th></tr></thead>
+            <tbody id="users-rows"></tbody>
+          </table>
+        </div>
+        <form class="card form" id="user-form">
+          <h2>Добавить менеджера</h2>
+          <label>Имя<input name="name" required maxlength="80"></label>
+          <label>Логин (латиница)<input name="login" required pattern="[a-zA-Z0-9._\-]{3,40}"></label>
+          <label>Пароль (от 8 символов)<input name="password" type="text" required minlength="8"></label>
+          <label>Контакт (телефон / Telegram)<input name="contact" maxlength="120"></label>
+          <label>Роль
+            <select name="role"><option value="manager">Менеджер — видит только свои заявки</option><option value="admin">Администратор — видит всё и распределяет</option></select>
+          </label>
+          <p class="err" id="user-err"></p>
+          <button class="btn btn--primary" type="submit">Добавить</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Профиль -->
+    <section class="view" id="view-profile" hidden>
+      <header class="main__head"><h1>Профиль</h1></header>
+      <form class="card form form--narrow" id="pass-form">
+        <h2>Сменить пароль</h2>
+        <label>Текущий пароль<input name="old" type="password" required autocomplete="current-password"></label>
+        <label>Новый пароль<input name="password" type="password" required minlength="8" autocomplete="new-password"></label>
+        <p class="err" id="pass-err"></p>
+        <button class="btn btn--primary" type="submit">Сохранить</button>
+      </form>
+    </section>
+  </main>
+</div>
+
+<!-- ===== Карточка заявки ===== -->
+<div class="drawer" id="drawer" hidden>
+  <div class="drawer__overlay" data-close></div>
+  <aside class="drawer__panel" role="dialog" aria-modal="true" aria-labelledby="d-title">
+    <header class="drawer__head">
+      <div>
+        <span class="drawer__id" id="d-id"></span>
+        <h2 id="d-title"></h2>
+        <span class="muted" id="d-date"></span>
+      </div>
+      <button class="icon-btn" data-close aria-label="Закрыть">✕</button>
+    </header>
+    <div class="drawer__body">
+      <div class="drawer__controls">
+        <label>Статус<select id="d-status"></select></label>
+        <label data-admin>Менеджер<select id="d-manager"></select></label>
+      </div>
+      <dl class="info" id="d-info"></dl>
+      <div class="msg" id="d-message"></div>
+
+      <h3>История и заметки</h3>
+      <ol class="timeline" id="d-events"></ol>
+      <form class="note-form" id="note-form">
+        <textarea name="text" rows="3" placeholder="Заметка: о чём договорились, следующий шаг…" required maxlength="3000"></textarea>
+        <button class="btn btn--primary" type="submit">Добавить заметку</button>
+      </form>
+      <button class="link link--danger" id="d-delete" data-admin>Удалить заявку</button>
+    </div>
+  </aside>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="admin.js"></script>
+</body>
+</html>

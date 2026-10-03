@@ -1,0 +1,13 @@
+{
+  "name": "ctgj-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Сайт CTGJ с админ-панелью заявок",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=22.13"
+  }
+}
