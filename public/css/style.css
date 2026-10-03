@@ -137,12 +137,27 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   pointer-events: none;
   width: min(620px, 88vw);
 }
+/* свечение за логотипом — отдельным слоем, а не filter на картинке:
+   Safari на iPhone рисует blur/drop-shadow на прозрачной PNG белым прямоугольником */
+.loader__brand::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: 130%;
+  height: 240%;
+  transform: translate(-50%, -50%) scale(0.6);
+  background: radial-gradient(closest-side, rgba(255, 190, 90, 0.28), rgba(255, 190, 90, 0) 70%);
+  opacity: 0;
+  transition: opacity 1.2s var(--ease), transform 1.4s var(--ease);
+  z-index: -1;
+}
 .loader__logo {
+  position: relative;
   width: 100%;
   opacity: 0;
   transform: scale(0.85);
-  filter: blur(12px) drop-shadow(0 0 30px rgba(255, 190, 90, 0.5));
-  transition: opacity 1s var(--ease), transform 1.4s var(--ease), filter 1.2s var(--ease);
+  transition: opacity 1s var(--ease), transform 1.4s var(--ease);
 }
 .loader__tagline {
   margin: 18px 0 0;
@@ -155,7 +170,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   transform: translateY(10px);
   transition: opacity 0.8s 0.4s var(--ease), transform 0.8s 0.4s var(--ease);
 }
-.loader.show-brand .loader__logo { opacity: 1; transform: scale(1); filter: blur(0) drop-shadow(0 0 30px rgba(255, 190, 90, 0.35)); }
+.loader.show-brand .loader__logo { opacity: 1; transform: scale(1); }
+.loader.show-brand .loader__brand::before { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 .loader.show-brand .loader__tagline { opacity: 1; transform: none; }
 .loader__skip {
   position: absolute;
@@ -981,7 +997,6 @@ html:lang(zh) .side-envelope__label { transform: none; letter-spacing: 0.3em; }
   transform-origin: top;
   transition: transform 0.6s var(--ease), z-index 0s 0.3s;
   z-index: 3;
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
 }
 .mail.stage-flap .env__flap { transform: rotateX(180deg); z-index: 0; }
 .env__seal {
@@ -1162,6 +1177,7 @@ html:lang(zh) .side-envelope__label { transform: none; letter-spacing: 0.3em; }
   .side-envelope__label { display: none; }
   .side-envelope::before { left: 12px; top: 12px; }
   .to-top { right: 16px; bottom: 18px; width: 52px; height: 52px; }
+  .loader__tagline { letter-spacing: 0.1em; font-size: 12px; }
   .stamp { width: 100px; height: 100px; font-size: 30px; }
   .header .langs { order: -1; }
 }
