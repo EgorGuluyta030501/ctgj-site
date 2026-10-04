@@ -114,17 +114,18 @@
     setTimeout(finishLoader, skipIntro ? 0 : 900);
   } else {
     // при повторном заходе в той же сессии — ускоренная версия
-    const speed = seenIntro ? 1.6 : 1;
+    // вся заставка укладывается примерно в 3 секунды (повторный заход — быстрее)
+    const speed = seenIntro ? 2.2 : 1.5;
     let brandShown = false;
     introScene = new window.SkyScene($('#loader-canvas'), {
       mode: 'intro',
       sky: true,
-      startTime: 0.25,
+      startTime: 0.6, // дракон влетает в кадр сразу, без пустого неба
       speed,
       onFrame(time) {
         if (!brandShown && time > 1.75) { brandShown = true; loader.classList.add('show-brand'); }
         // закрываем сразу после петли, пока дракон улетает
-        if (time > 3.7) finishLoader();
+        if (time > 3.4) finishLoader();
       },
     });
     introScene.start();
