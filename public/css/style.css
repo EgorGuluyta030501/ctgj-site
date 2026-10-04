@@ -348,13 +348,12 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   z-index: 0;
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(4, 6, 14, 0.88) 0%, rgba(4, 6, 14, 0.62) 42%, rgba(4, 6, 14, 0.3) 100%),
-    linear-gradient(180deg, rgba(4, 6, 14, 0.65) 0%, rgba(4, 6, 14, 0) 22%, rgba(4, 6, 14, 0) 62%, var(--bg) 100%),
-    radial-gradient(900px 500px at 20% 100%, rgba(216, 38, 28, 0.18), transparent 60%);
+    linear-gradient(90deg, rgba(4, 6, 14, 0.62) 0%, rgba(4, 6, 14, 0.32) 40%, rgba(4, 6, 14, 0.05) 75%, rgba(4, 6, 14, 0) 100%),
+    linear-gradient(180deg, rgba(4, 6, 14, 0.5) 0%, rgba(4, 6, 14, 0) 18%, rgba(4, 6, 14, 0) 72%, var(--bg) 100%);
 }
 .hero__canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
 @media (max-width: 900px) {
-  .hero__shade { background: linear-gradient(180deg, rgba(4, 6, 14, 0.75) 0%, rgba(4, 6, 14, 0.6) 45%, rgba(4, 6, 14, 0.8) 80%, var(--bg) 100%); }
+  .hero__shade { background: linear-gradient(180deg, rgba(4, 6, 14, 0.55) 0%, rgba(4, 6, 14, 0.3) 40%, rgba(4, 6, 14, 0.5) 78%, var(--bg) 100%); }
 }
 .hero__skyline {
   position: absolute;
@@ -416,10 +415,10 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   text-shadow: 0 4px 40px rgba(4, 6, 14, 0.6);
 }
 html:lang(zh) .hero__title { letter-spacing: 0; line-height: 1.15; }
-.hero__text { max-width: 560px; font-size: clamp(16px, 1.3vw, 19px); color: rgba(246, 239, 226, 0.78); margin: 0 0 40px; }
+.hero__text { max-width: 560px; font-size: clamp(16px, 1.3vw, 19px); color: rgba(246, 239, 226, 0.9); margin: 0 0 40px; text-shadow: 0 1px 3px rgba(4, 6, 14, 0.9), 0 2px 18px rgba(4, 6, 14, 0.7); }
 .hero__actions { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 64px; }
 .hero__stats { display: flex; flex-wrap: wrap; gap: clamp(20px, 4vw, 64px); list-style: none; padding: 0; margin: 0; }
-.hero__stats li { display: flex; align-items: center; gap: 14px; max-width: 220px; font-size: 14px; color: var(--muted); line-height: 1.35; }
+.hero__stats li { display: flex; align-items: center; gap: 14px; max-width: 220px; font-size: 14px; color: rgba(246, 239, 226, 0.82); line-height: 1.35; text-shadow: 0 1px 3px rgba(4, 6, 14, 0.9), 0 2px 14px rgba(4, 6, 14, 0.7); }
 .hero__stats b { font-family: var(--f-head); font-weight: 500; font-size: clamp(36px, 4vw, 54px); line-height: 1; color: var(--gold); }
 
 .hero__vertical {

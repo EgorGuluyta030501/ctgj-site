@@ -160,8 +160,8 @@
     }
     if (reduced || !window.SkyScene || heroScene) return;
     const canvas = $('#hero-canvas');
-    // поверх видео: дракон и небесные фонарики, без луны и звёзд
-    heroScene = new window.SkyScene(canvas, { mode: 'hero', sky: false, moon: false, stars: false, clouds: false, startTime: 0 });
+    // поверх видео только небесные фонарики: дракон летает лишь на заставке
+    heroScene = new window.SkyScene(canvas, { mode: 'hero', sky: false, dragon: false, moon: false, stars: false, clouds: false, startTime: 0 });
     const io = new IntersectionObserver(([e]) => {
       if (e.isIntersecting && !document.hidden) heroScene.start(); else heroScene.stop();
     });

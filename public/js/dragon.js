@@ -112,9 +112,10 @@
 
     width(u) {
       const s = this.size;
-      if (u < 0.05) return s * lerp(0.7, 0.86, u / 0.05);
-      if (u < 0.22) return s * lerp(0.86, 1, (u - 0.05) / 0.17);
-      return s * lerp(1, 0.1, Math.pow((u - 0.22) / 0.78, 1.25));
+      // тело полнее, хвост сужается мягче
+      if (u < 0.05) return s * lerp(0.8, 0.98, u / 0.05);
+      if (u < 0.25) return s * lerp(0.98, 1.12, (u - 0.05) / 0.2);
+      return s * lerp(1.12, 0.2, Math.pow((u - 0.25) / 0.75, 1.15));
     }
 
     /* полоса вдоль тела: от смещения a до b (доли толщины, + к спине) */
@@ -143,14 +144,33 @@
       this.drawLeg(ctx, Math.round(n * 0.17), t, Math.PI, true);
       this.drawLeg(ctx, Math.round(n * 0.56), t, Math.PI + 1.3, true);
 
-      // спинной гребень
+      // спинной гребень: три слоя пламени — тёмный высокий, оранжевый, жёлтые кончики
+      const crest = [
+        { color: FIRE.deep, step: 2, hMul: 1.35, wMul: 0.5, phase: 0 },
+        { color: FIRE.red, step: 2, hMul: 1.0, wMul: 0.4, phase: 1.3 },
+        { color: FIRE.orange, step: 3, hMul: 0.62, wMul: 0.3, phase: 2.1 },
+      ];
+      for (const L of crest) {
+        ctx.beginPath();
+        for (let i = 2; i < n * 0.95; i += L.step) {
+          const q = p[i];
+          const u = i / n;
+          const h = q.w * L.hMul * (0.8 + 0.3 * Math.sin(i * 1.7 + L.phase)) * (u < 0.06 ? 0.7 : 1);
+          const ang = Math.atan2(q.ny - q.ty * 0.9, q.nx - q.tx * 0.9);
+          flame(ctx, q.x + q.nx * q.w * 0.36, q.y + q.ny * q.w * 0.36, ang, h, q.w * L.wMul, t * 5 + i * 0.4 + L.phase, -0.12 * this.side);
+        }
+        ctx.fillStyle = L.color;
+        ctx.fill();
+      }
+
+      // длинная грива вдоль шеи
       ctx.beginPath();
-      for (let i = 3; i < n * 0.93; i += 3) {
+      for (let i = 1; i < n * 0.2; i += 1) {
         const q = p[i];
-        const u = i / n;
-        const h = q.w * (0.75 + 0.25 * Math.sin(i * 1.7)) * (u < 0.1 ? 0.6 : 1);
-        const ang = Math.atan2(q.ny - q.ty * 0.9, q.nx - q.tx * 0.9);
-        flame(ctx, q.x + q.nx * q.w * 0.38, q.y + q.ny * q.w * 0.38, ang, h, q.w * 0.42, t * 5 + i * 0.4, -0.12 * this.side);
+        const u = i / (n * 0.2);
+        const len = this.size * (2.2 - u * 1.4) * (0.85 + 0.15 * Math.sin(i * 2.3));
+        const ang = Math.atan2(q.ny * 0.55 - q.ty, q.nx * 0.55 - q.tx);
+        flame(ctx, q.x + q.nx * q.w * 0.3, q.y + q.ny * q.w * 0.3, ang, len, q.w * 0.42, t * 4.5 + i * 0.5, 0.06 * this.side);
       }
       ctx.fillStyle = FIRE.red;
       ctx.fill();
@@ -257,18 +277,32 @@
     drawTail(ctx, t) {
       const p = this.pts, q = p[p.length - 1], s = this.size;
       const back = Math.atan2(-q.ty, -q.tx);
+      // пышная огненная кисть: веер из четырёх слоёв
+      const layers = [
+        { color: FIRE.deep, from: -4, to: 4, spread: 0.3, len: 3.0, w: 0.55, drop: 0.25 },
+        { color: FIRE.red, from: -3, to: 3, spread: 0.28, len: 2.4, w: 0.45, drop: 0.25 },
+        { color: FIRE.orange, from: -2, to: 2, spread: 0.24, len: 1.7, w: 0.32, drop: 0.25 },
+        { color: FIRE.yellow, from: -1, to: 1, spread: 0.2, len: 1.0, w: 0.2, drop: 0.2 },
+      ];
+      layers.forEach((L, li) => {
+        ctx.beginPath();
+        for (let k = L.from; k <= L.to; k++) {
+          const ang = back + k * L.spread * this.side;
+          flame(ctx, q.x, q.y, ang, s * (L.len - Math.abs(k) * L.drop), s * L.w, t * 6 + k + li, 0.1 * k);
+        }
+        ctx.fillStyle = L.color;
+        ctx.fill();
+      });
+      // огненные пучки и на последних сегментах хвоста
       ctx.beginPath();
-      for (let k = -2; k <= 2; k++) {
-        const ang = back + k * 0.32 * this.side;
-        flame(ctx, q.x, q.y, ang, s * (1.9 - Math.abs(k) * 0.3), s * 0.42, t * 6 + k, 0.1 * k);
+      for (let i = p.length - 12; i < p.length - 1; i += 3) {
+        const r = p[i];
+        for (const sgn of [1, -1]) {
+          const ang = Math.atan2(r.ny * sgn * 0.8 - r.ty, r.nx * sgn * 0.8 - r.tx);
+          flame(ctx, r.x, r.y, ang, s * 1.1, s * 0.3, t * 6 + i + sgn, 0.08 * sgn);
+        }
       }
       ctx.fillStyle = FIRE.red;
-      ctx.fill();
-      ctx.beginPath();
-      for (let k = -1; k <= 1; k++) {
-        flame(ctx, q.x, q.y, back + k * 0.25 * this.side, s * (1.3 - Math.abs(k) * 0.2), s * 0.25, t * 6 + k + 2, 0.1 * k);
-      }
-      ctx.fillStyle = FIRE.orange;
       ctx.fill();
     }
 
@@ -307,12 +341,25 @@
       ctx.stroke();
 
       // пламя на локте
-      ctx.beginPath();
       const back = Math.atan2(-fy, -fx);
-      flame(ctx, jx, jy, back + 0.3 * this.side, s * 0.7, s * 0.24, ph * 1.3, 0.05);
-      flame(ctx, jx, jy, back - 0.1 * this.side, s * 0.55, s * 0.18, ph * 1.3 + 1, 0.05);
-      ctx.fillStyle = far ? FIRE.deep : FIRE.orange;
+      ctx.beginPath();
+      for (let k = 0; k < 4; k++) {
+        flame(ctx, jx, jy, back + (0.55 - k * 0.28) * this.side, s * (1.15 - k * 0.12), s * 0.32, ph * 1.3 + k, 0.05);
+      }
+      // пучок и на плече
+      for (let k = 0; k < 3; k++) {
+        flame(ctx, ax, ay, back + (0.6 - k * 0.3) * this.side, s * (0.9 - k * 0.1), s * 0.3, ph * 1.2 + k + 2, 0.05);
+      }
+      ctx.fillStyle = far ? FIRE.deep : FIRE.red;
       ctx.fill();
+      if (!far) {
+        ctx.beginPath();
+        for (let k = 0; k < 3; k++) {
+          flame(ctx, jx, jy, back + (0.35 - k * 0.3) * this.side, s * (0.7 - k * 0.08), s * 0.2, ph * 1.3 + k + 1, 0.05);
+        }
+        ctx.fillStyle = FIRE.orange;
+        ctx.fill();
+      }
 
       // когти
       const base = Math.atan2(ky - jy, kx - jx);
@@ -344,30 +391,24 @@
       const jaw = 0.2 + Math.sin(t * 2.3) * 0.1;
 
       // грива — за головой
-      ctx.beginPath();
-      for (let k = 0; k < 11; k++) {
-        const y = lerp(-0.6, 0.45, k / 10) * s;
-        const ang = Math.PI + lerp(-1.05, 0.55, k / 10);
-        flame(ctx, s * 0.35, y, ang, s * (2.1 + Math.sin(k * 2.1) * 0.45), s * 0.5, t * 5 + k, 0.1);
+      // пышная грива: четыре слоя, веер шире и длиннее
+      const mane = [
+        { color: FIRE.deep, count: 15, y0: -0.75, y1: 0.6, a0: -1.3, a1: 0.75, len: 2.9, var: 0.55, w: 0.6, ph: 0 },
+        { color: FIRE.red, count: 12, y0: -0.65, y1: 0.5, a0: -1.1, a1: 0.6, len: 2.2, var: 0.4, w: 0.48, ph: 1 },
+        { color: FIRE.orange, count: 9, y0: -0.55, y1: 0.4, a0: -0.9, a1: 0.5, len: 1.55, var: 0.3, w: 0.36, ph: 2 },
+        { color: FIRE.yellow, count: 6, y0: -0.4, y1: 0.3, a0: -0.6, a1: 0.35, len: 0.95, var: 0.2, w: 0.22, ph: 3 },
+      ];
+      for (const M of mane) {
+        ctx.beginPath();
+        for (let k = 0; k < M.count; k++) {
+          const f = k / (M.count - 1);
+          const y = lerp(M.y0, M.y1, f) * s;
+          const ang = Math.PI + lerp(M.a0, M.a1, f);
+          flame(ctx, s * 0.35, y, ang, s * (M.len + Math.sin(k * 2.1 + M.ph) * M.var), s * M.w, t * 5 + k + M.ph, 0.1);
+        }
+        ctx.fillStyle = M.color;
+        ctx.fill();
       }
-      ctx.fillStyle = FIRE.deep;
-      ctx.fill();
-      ctx.beginPath();
-      for (let k = 0; k < 9; k++) {
-        const y = lerp(-0.55, 0.4, k / 8) * s;
-        const ang = Math.PI + lerp(-0.9, 0.5, k / 8);
-        flame(ctx, s * 0.35, y, ang, s * (1.6 + Math.sin(k * 1.3) * 0.3), s * 0.4, t * 5 + k + 1, 0.08);
-      }
-      ctx.fillStyle = FIRE.red;
-      ctx.fill();
-      ctx.beginPath();
-      for (let k = 0; k < 7; k++) {
-        const y = lerp(-0.45, 0.3, k / 6) * s;
-        const ang = Math.PI + lerp(-0.7, 0.4, k / 6);
-        flame(ctx, s * 0.35, y, ang, s * (1.1 + Math.sin(k * 1.7) * 0.2), s * 0.28, t * 5 + k + 2, 0.06);
-      }
-      ctx.fillStyle = FIRE.orange;
-      ctx.fill();
 
       // рога (дальний и ближний)
       this.horn(ctx, s, s * 0.32, -s * 0.52, '#7a4f1c', t);
@@ -417,8 +458,14 @@
       ctx.fill();
       // борода
       ctx.beginPath();
-      for (let k = 0; k < 4; k++) {
-        flame(ctx, s * (0.25 + k * 0.17), s * 0.24, Math.PI * 0.62 + k * 0.05, s * (0.75 - k * 0.1), s * 0.18, t * 5 + k, 0.08);
+      for (let k = 0; k < 6; k++) {
+        flame(ctx, s * (0.15 + k * 0.15), s * 0.24, Math.PI * 0.64 + k * 0.05, s * (1.25 - k * 0.12), s * 0.24, t * 5 + k, 0.08);
+      }
+      ctx.fillStyle = FIRE.red;
+      ctx.fill();
+      ctx.beginPath();
+      for (let k = 0; k < 5; k++) {
+        flame(ctx, s * (0.22 + k * 0.15), s * 0.24, Math.PI * 0.62 + k * 0.05, s * (0.8 - k * 0.08), s * 0.16, t * 5 + k + 1, 0.08);
       }
       ctx.fillStyle = FIRE.orange;
       ctx.fill();
@@ -575,7 +622,7 @@
     emit(t) {
       const p = this.pts;
       if (!p.length) return;
-      for (let k = 0; k < 3; k++) {
+      for (let k = 0; k < 6; k++) {
         const q = p[(Math.random() * p.length) | 0];
         this.particles.push({
           x: q.x + rand(-1, 1) * q.w * 0.6,
@@ -583,10 +630,10 @@
           vx: -q.tx * rand(10, 50) + rand(-15, 15),
           vy: -q.ty * rand(10, 50) + rand(-25, 5),
           life: 0, max: rand(0.8, 1.8),
-          r: rand(0.8, 2.6),
+          r: rand(0.8, 3),
         });
       }
-      if (this.particles.length > 400) this.particles.splice(0, this.particles.length - 400);
+      if (this.particles.length > 700) this.particles.splice(0, this.particles.length - 700);
     }
 
     drawParticles(ctx, dt) {
@@ -645,7 +692,9 @@
       const m = Math.min(W, H);
       const intro = this.opt.mode === 'intro';
       const size = clamp(m * (intro ? 0.08 : 0.045), 20, intro ? 82 : 46);
-      this.dragon = new Dragon({ size, length: intro ? 15 : 16, path: intro ? this.introPath() : this.heroPath(size) });
+      // dragon: false — сцена только с фонариками (главный экран)
+      this.dragon = this.opt.dragon === false ? null
+        : new Dragon({ size, length: intro ? 15 : 16, path: intro ? this.introPath() : this.heroPath(size) });
       this.stars = Array.from({ length: Math.round((W * H) / 5200) }, () => ({
         x: Math.random() * W, y: Math.random() * H * 0.8,
         r: Math.random() * 1.3 + 0.2, ph: Math.random() * TAU, sp: rand(0.6, 2.2),
@@ -773,8 +822,10 @@
       ctx.clearRect(0, 0, this.W, this.H);
       this.drawSky(ctx);
       this.drawLanterns(ctx, dt);
-      this.dragon.draw(ctx, this.time);
-      this.dragon.drawParticles(ctx, dt);
+      if (this.dragon) {
+        this.dragon.draw(ctx, this.time);
+        this.dragon.drawParticles(ctx, dt);
+      }
       this.drawClouds(ctx, dt);
     }
 
@@ -806,8 +857,10 @@
     /* для отладки: отрисовать кадр в момент t */
     renderAt(t) {
       this.time = t;
-      this.dragon.sample(t);
-      for (let k = 0; k < 30; k++) this.dragon.emit(t);
+      if (this.dragon) {
+        this.dragon.sample(t);
+        for (let k = 0; k < 30; k++) this.dragon.emit(t);
+      }
       this.render(1 / 60);
     }
   }
