@@ -98,11 +98,11 @@
       document.body.classList.add('is-ready');
       startHero();
       initReveal();
-    }, 550);
+    }, 330);
     setTimeout(() => {
       loader.classList.add('is-done');
       if (introScene) introScene.destroy();
-    }, 1200);
+    }, 760);
   }
 
   let introScene = null;
@@ -123,7 +123,8 @@
       speed,
       onFrame(time) {
         if (!brandShown && time > 1.75) { brandShown = true; loader.classList.add('show-brand'); }
-        if (time > 4.6) finishLoader();
+        // закрываем сразу после петли, пока дракон улетает
+        if (time > 3.7) finishLoader();
       },
     });
     introScene.start();
