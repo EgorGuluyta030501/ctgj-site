@@ -114,8 +114,8 @@
     setTimeout(finishLoader, skipIntro ? 0 : 900);
   } else {
     // при повторном заходе в той же сессии — ускоренная версия
-    // вся заставка укладывается примерно в 3 секунды (повторный заход — быстрее)
-    const speed = seenIntro ? 2.2 : 1.5;
+    // вся заставка укладывается примерно в 4 секунды (повторный заход — быстрее)
+    const speed = seenIntro ? 1.5 : 1;
     let brandShown = false;
     introScene = new window.SkyScene($('#loader-canvas'), {
       mode: 'intro',
