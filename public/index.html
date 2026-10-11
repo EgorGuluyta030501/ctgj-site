@@ -35,6 +35,23 @@
 <div class="progress" id="progress"></div>
 <div class="cursor" id="cursor" aria-hidden="true"></div>
 
+<!-- живой фон секций: поднимающиеся небесные фонарики (js/ambient.js) -->
+<canvas class="ambient" id="ambient" aria-hidden="true"></canvas>
+
+<!-- китайское облако 祥云 — используется как декор в секциях -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="xiangyun" viewBox="0 0 240 100">
+    <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 80 C10 60 40 55 50 68 C45 45 75 35 90 52 C95 25 140 20 150 50 C165 38 195 45 190 68 C210 66 225 78 215 88 L20 88 C12 88 10 84 10 80 Z"/>
+      <path d="M70 66 c-8 -2 -8 -14 2 -14 c8 0 9 10 2 11 c-4 0 -4 -5 0 -5"/>
+      <path d="M120 54 c-10 -2 -10 -18 3 -18 c10 0 11 13 3 14 c-5 0 -5 -6 0 -6"/>
+      <path d="M176 66 c-7 -1 -7 -12 2 -12 c7 0 8 9 2 10 c-3 0 -3 -4 0 -4"/>
+      <path d="M215 88 C228 92 236 84 230 76 c-3 -4 -9 -2 -8 2"/>
+      <path d="M30 80 h40 M95 80 h60" opacity="0.6"/>
+    </g>
+  </symbol>
+</svg>
+
 <!-- ========== Шапка ========== -->
 <header class="header" id="header">
   <div class="container header__inner">
@@ -122,6 +139,7 @@
 
   <!-- ========== 01 О компании ========== -->
   <section class="section about" id="about">
+    <svg class="cloud cloud--a" aria-hidden="true"><use href="#xiangyun"/></svg>
     <div class="container">
       <div class="section__head">
         <span class="section__num"><i>一</i>01</span>
@@ -163,6 +181,8 @@
 
   <!-- ========== 02 Услуги: поворотные фонари-шары ========== -->
   <section class="section services" id="services">
+    <svg class="cloud cloud--b" aria-hidden="true"><use href="#xiangyun"/></svg>
+    <svg class="cloud cloud--b2" aria-hidden="true"><use href="#xiangyun"/></svg>
     <div class="services__glow" aria-hidden="true"></div>
     <div class="container">
       <div class="section__head">
@@ -263,6 +283,7 @@
   <!-- ========== 03 Проекты: карусель со стрелками ========== -->
   <!-- ЗАМЕНИТЬ: карточки ниже — примеры направлений. Подставьте реальные проекты заказчика. -->
   <section class="section projects" id="projects">
+    <svg class="cloud cloud--c" aria-hidden="true"><use href="#xiangyun"/></svg>
       <div class="container projects__head">
         <div>
           <div class="section__head">
@@ -323,6 +344,7 @@
   <!-- ========== 04 Контакты ========== -->
   <!-- ЗАМЕНИТЬ: контактные данные ниже — заглушки. -->
   <section class="section contacts" id="contacts">
+    <svg class="cloud cloud--d" aria-hidden="true"><use href="#xiangyun"/></svg>
     <div class="container">
       <div class="section__head">
         <span class="section__num"><i>四</i>04</span>
@@ -446,6 +468,7 @@
 
 <script src="js/i18n.js"></script>
 <script src="js/dragon.js"></script>
+<script src="js/ambient.js" defer></script>
 <script src="js/main.js" defer></script>
 </body>
 </html>

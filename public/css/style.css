@@ -611,6 +611,35 @@ body.is-ready [data-hero]:nth-child(5) { transition-delay: 0.4s; }
    Общие секции
    ============================================================ */
 .section { position: relative; padding: clamp(90px, 12vw, 170px) 0; }
+
+/* ---------- живой фон секций ----------
+   слои: фон секции → фонарики (.ambient, z 1) → облака → содержимое (z 2).
+   Первый экран (z 3) перекрывает фонарики — там своя сцена. */
+.ambient { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+.hero { z-index: 3; }
+.section > .container,
+.projects__track { position: relative; z-index: 2; }
+
+.cloud {
+  position: absolute;
+  z-index: 1;
+  width: clamp(150px, 17vw, 270px);
+  aspect-ratio: 240 / 100;
+  color: var(--gold);
+  opacity: 0.2;
+  pointer-events: none;
+  animation: cloudDrift 16s ease-in-out infinite alternate;
+}
+:root[data-theme='light'] .cloud { opacity: 0.28; }
+.cloud--a { top: 70px; right: -30px; }
+.cloud--b { top: 18%; left: -60px; transform: scaleX(-1); animation-duration: 19s; }
+.cloud--b2 { bottom: 12%; right: -50px; width: clamp(120px, 13vw, 200px); animation-duration: 14s; animation-delay: -5s; }
+.cloud--c { bottom: 30px; left: 3%; animation-duration: 18s; animation-delay: -8s; }
+.cloud--d { top: 90px; right: 5%; animation-duration: 15s; animation-delay: -3s; }
+@keyframes cloudDrift {
+  from { translate: -18px 0; }
+  to { translate: 22px -8px; }
+}
 .section__head { display: flex; align-items: center; gap: 18px; margin-bottom: 30px; }
 .section__num { display: inline-flex; align-items: center; gap: 10px; font-family: var(--f-head); font-size: 13px; color: var(--gold); }
 .section__num i { font-style: normal; font-family: var(--f-cn); font-size: 28px; line-height: 1; color: var(--red); }
@@ -926,7 +955,7 @@ body.is-ready [data-hero]:nth-child(5) { transition-delay: 0.4s; }
    Футер
    ============================================================ */
 .footer { position: relative; padding: 60px 0; border-top: 1px solid var(--line); }
-.footer__inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 30px; position: relative; z-index: 1; }
+.footer__inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 30px; position: relative; z-index: 2; }
 .footer__logo { height: 36px; width: auto; }
 .footer__nav { display: flex; flex-wrap: wrap; gap: 26px; font-size: 15px; color: var(--muted); }
 .footer__nav a:hover { color: var(--ink); }
@@ -1276,6 +1305,8 @@ html:lang(zh) .side-envelope__label { transform: none; letter-spacing: 0.3em; }
   .side-envelope__label { display: none; }
   .side-envelope::before { left: 12px; top: 12px; }
   .to-top { right: 16px; bottom: 18px; width: 52px; height: 52px; }
+  .cloud--b2, .cloud--d { display: none; }
+  .cloud { opacity: 0.14; }
   .theme-switch { width: 48px; height: 28px; }
   .theme-switch__thumb { width: 20px; height: 20px; }
   .theme-switch svg { width: 13px; height: 13px; }
