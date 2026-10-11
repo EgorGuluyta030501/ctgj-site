@@ -29,11 +29,16 @@
     { size: [28, 38], speed: [24, 36], alpha: 0.95, parallax: 0.42, share: 0.22 },
   ];
 
+  // телефон: экран маленький, поэтому без крупного ближнего уровня
+  const isMobile = () => W < 700;
+
   function pickLayer() {
-    const r = Math.random();
+    const layers = isMobile() ? LAYERS.slice(0, 2) : LAYERS;
+    const total = layers.reduce((n, L) => n + L.share, 0);
+    const r = Math.random() * total;
     let acc = 0;
-    for (const L of LAYERS) { acc += L.share; if (r <= acc) return L; }
-    return LAYERS[0];
+    for (const L of layers) { acc += L.share; if (r <= acc) return L; }
+    return layers[0];
   }
 
   /* крупные фонарики держим у краёв экрана, подальше от колонок текста;
@@ -57,7 +62,7 @@
       L,
       x: pickX(L),
       y: initial ? rand(0, H) : H + rand(30, 160),
-      s: rand(L.size[0], L.size[1]),
+      s: rand(L.size[0], L.size[1]) * (isMobile() ? 0.8 : 1),
       v: rand(L.speed[0], L.speed[1]),
       ph: rand(0, TAU),
       sway: L === LAYERS[0] ? rand(6, 16) : rand(3, 8), // крупные качаются слабо — не заплывают на текст
@@ -74,9 +79,9 @@
     canvas.height = Math.round(H * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     // примерно вдвое реже, чем раньше: фон, а не главный герой
-    const count = Math.round(Math.min(11, Math.max(4, W / 135)));
+    const count = isMobile() ? (W < 420 ? 2 : 3) : Math.round(Math.min(11, Math.max(4, W / 135)));
     lanterns = Array.from({ length: count }, () => newLantern(true));
-    sparks = Array.from({ length: Math.round(count * 1.3) }, () => newSpark(true));
+    sparks = Array.from({ length: isMobile() ? 4 : Math.round(count * 1.3) }, () => newSpark(true));
   }
 
   function newSpark(initial) {
