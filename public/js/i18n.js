@@ -90,6 +90,7 @@ window.I18N = {
     'projects.prev': 'Предыдущие проекты',
     'projects.next': 'Следующие проекты',
     'toTop': 'Наверх',
+    'theme.light': 'Светлая тема',
 
     'band.title': 'Расскажите о задаче — мы предложим решение',
     'band.btn': 'Написать нам',
@@ -222,6 +223,7 @@ window.I18N = {
     'projects.prev': 'Previous projects',
     'projects.next': 'Next projects',
     'toTop': 'Back to top',
+    'theme.light': 'Light theme',
 
     'band.title': 'Tell us about your task — we will propose a solution',
     'band.btn': 'Write to us',
@@ -354,6 +356,7 @@ window.I18N = {
     'projects.prev': '上一个项目',
     'projects.next': '下一个项目',
     'toTop': '返回顶部',
+    'theme.light': '浅色主题',
 
     'band.title': '告诉我们您的任务——我们会提出解决方案',
     'band.btn': '联系我们',

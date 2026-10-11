@@ -1,10 +1,12 @@
 /* CTGJ — сервер сайта и админ-панели заявок.
-   Требуется Node.js 22.13+ (встроенный SQLite), внешних зависимостей нет.
+   База данных — PostgreSQL (см. db.js). Требуется Node.js 22.13+.
 
-   Запуск:            node server.js
+   Запуск:            npm install, затем node server.js
    Сменить пароль:    node server.js set-password <логин> <новый_пароль>
 
-   Переменные окружения (необязательно):
+   Переменные окружения:
+     DATABASE_URL      — адрес PostgreSQL (на хостинге обязательно; без него
+                         для разработки поднимается локальная база в data/pg)
      PORT              — порт (по умолчанию 3000)
      ADMIN_LOGIN       — логин первого администратора (по умолчанию admin)
      ADMIN_PASSWORD    — пароль первого администратора (иначе сгенерируется и выведется в консоль)
@@ -16,65 +18,14 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const { DatabaseSync } = require('node:sqlite');
+const db = require('./db');
 
 const PORT = Number(process.env.PORT) || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
-const DATA_DIR = path.join(__dirname, 'data');
 const SESSION_TTL = 1000 * 60 * 60 * 24 * 7; // 7 дней
 
 const STATUSES = ['new', 'assigned', 'work', 'done', 'rejected'];
 const SERVICES = ['supply', 'warehouse', 'procurement', 'logistics', 'other'];
-
-/* ================= База данных ================= */
-fs.mkdirSync(DATA_DIR, { recursive: true });
-const db = new DatabaseSync(path.join(DATA_DIR, 'ctgj.db'));
-db.exec(`
-  PRAGMA journal_mode = WAL;
-  PRAGMA foreign_keys = ON;
-  CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY,
-    name TEXT NOT NULL,
-    login TEXT NOT NULL UNIQUE COLLATE NOCASE,
-    pass TEXT NOT NULL,
-    role TEXT NOT NULL CHECK (role IN ('admin', 'manager')),
-    contact TEXT NOT NULL DEFAULT '',
-    active INTEGER NOT NULL DEFAULT 1,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
-  );
-  CREATE TABLE IF NOT EXISTS sessions (
-    token TEXT PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    expires INTEGER NOT NULL
-  );
-  CREATE TABLE IF NOT EXISTS requests (
-    id INTEGER PRIMARY KEY,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-    name TEXT NOT NULL,
-    phone TEXT NOT NULL DEFAULT '',
-    email TEXT NOT NULL DEFAULT '',
-    company TEXT NOT NULL DEFAULT '',
-    service TEXT NOT NULL DEFAULT 'other',
-    message TEXT NOT NULL DEFAULT '',
-    lang TEXT NOT NULL DEFAULT '',
-    source TEXT NOT NULL DEFAULT '',
-    ip TEXT NOT NULL DEFAULT '',
-    status TEXT NOT NULL DEFAULT 'new',
-    manager_id INTEGER REFERENCES users(id) ON DELETE SET NULL
-  );
-  CREATE TABLE IF NOT EXISTS events (
-    id INTEGER PRIMARY KEY,
-    request_id INTEGER NOT NULL REFERENCES requests(id) ON DELETE CASCADE,
-    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-    kind TEXT NOT NULL,
-    text TEXT NOT NULL DEFAULT '',
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
-  );
-  CREATE INDEX IF NOT EXISTS idx_requests_status ON requests(status);
-  CREATE INDEX IF NOT EXISTS idx_requests_manager ON requests(manager_id);
-  CREATE INDEX IF NOT EXISTS idx_events_request ON events(request_id);
-`);
 
 /* ================= Пароли и сессии ================= */
 function hashPassword(pw) {
@@ -90,44 +41,32 @@ function checkPassword(pw, stored) {
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
-// CLI: смена пароля
-if (process.argv[2] === 'set-password') {
-  const [, , , login, pw] = process.argv;
-  if (!login || !pw || pw.length < 8) {
-    console.error('Использование: node server.js set-password <логин> <пароль от 8 символов>');
-    process.exit(1);
-  }
-  const r = db.prepare('UPDATE users SET pass = ? WHERE login = ?').run(hashPassword(pw), login);
-  console.log(r.changes ? `Пароль для «${login}» обновлён.` : `Пользователь «${login}» не найден.`);
-  process.exit(0);
-}
-
 // первый администратор
-if (!db.prepare('SELECT COUNT(*) AS n FROM users').get().n) {
+async function ensureAdmin() {
+  const { n } = await db.one('SELECT count(*)::int AS n FROM users');
+  if (n) return;
   const login = process.env.ADMIN_LOGIN || 'admin';
   const pw = process.env.ADMIN_PASSWORD || crypto.randomBytes(9).toString('base64url');
-  db.prepare("INSERT INTO users (name, login, pass, role) VALUES (?, ?, ?, 'admin')").run('Администратор', login, hashPassword(pw));
+  await db.run("INSERT INTO users (name, login, pass, role) VALUES ($1, $2, $3, 'admin')", ['Администратор', login, hashPassword(pw)]);
   console.log('\n  Создан администратор админ-панели:');
   console.log(`    логин:  ${login}`);
   console.log(`    пароль: ${pw}`);
   console.log('  Сохраните пароль. Сменить: node server.js set-password <логин> <пароль>\n');
 }
 
-function createSession(userId) {
+async function createSession(userId) {
   const token = crypto.randomBytes(32).toString('hex');
-  db.prepare('INSERT INTO sessions (token, user_id, expires) VALUES (?, ?, ?)').run(token, userId, Date.now() + SESSION_TTL);
+  await db.run('INSERT INTO sessions (token, user_id, expires_at) VALUES ($1, $2, $3)', [token, userId, new Date(Date.now() + SESSION_TTL)]);
   return token;
 }
-function getUser(req) {
+async function getUser(req) {
   const token = parseCookies(req).sid;
   if (!token) return null;
-  const row = db.prepare(`
-    SELECT u.id, u.name, u.login, u.role, u.active, s.expires FROM sessions s
-    JOIN users u ON u.id = s.user_id WHERE s.token = ?`).get(token);
-  if (!row || row.expires < Date.now() || !row.active) return null;
-  return { id: row.id, name: row.name, login: row.login, role: row.role };
+  return db.one(`
+    SELECT u.id, u.name, u.login, u.role FROM sessions s
+    JOIN users u ON u.id = s.user_id
+    WHERE s.token = $1 AND s.expires_at > now() AND u.active`, [token]);
 }
-setInterval(() => db.prepare('DELETE FROM sessions WHERE expires < ?').run(Date.now()), 3600 * 1000).unref();
 
 /* ================= Утилиты HTTP ================= */
 function parseCookies(req) {
@@ -220,8 +159,8 @@ function notifyTelegram(r) {
 }
 
 /* ================= API ================= */
-function logEvent(requestId, userId, kind, text = '') {
-  db.prepare('INSERT INTO events (request_id, user_id, kind, text) VALUES (?, ?, ?, ?)').run(requestId, userId, kind, text);
+function logEvent(q, requestId, userId, kind, text = '') {
+  return q.run('INSERT INTO events (request_id, user_id, kind, text) VALUES ($1, $2, $3, $4)', [requestId, userId, kind, text]);
 }
 function canSee(user, r) {
   return user.role === 'admin' || r.manager_id === user.id;
@@ -257,12 +196,16 @@ route('POST', /^\/api\/requests$/, async (req, res) => {
   };
   if (!r.name || (!r.phone && !r.email)) return reject(400, 'required', 'Укажите имя и телефон или email');
   if (r.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.email)) return reject(400, 'email', 'Некорректный email');
-  const info = db.prepare(`INSERT INTO requests (name, phone, email, company, service, message, lang, source, ip)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(r.name, r.phone, r.email, r.company, r.service, r.message, r.lang, r.source, ip);
-  r.id = Number(info.lastInsertRowid);
+  // заявка и запись в историю — одной транзакцией
+  r.id = await db.tx(async (t) => {
+    const row = await t.one(`INSERT INTO requests (name, phone, email, company, service, message, lang, source, ip)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+      [r.name, r.phone, r.email, r.company, r.service, r.message, r.lang, r.source, ip]);
+    await logEvent(t, row.id, null, 'created', 'Заявка с сайта');
+    return row.id;
+  });
   hit('req:' + ip);
   console.log(`[заявка] #${r.id} сохранена: ${r.name} (${r.source || 'сайт'}) ip=${ip}`);
-  logEvent(r.id, null, 'created', 'Заявка с сайта');
   notifyTelegram(r);
   send(res, 201, { ok: true, id: r.id });
 });
@@ -272,19 +215,19 @@ route('POST', /^\/api\/login$/, async (req, res) => {
   const ip = clientIp(req);
   if (overLimit('login:' + ip, LOGIN_LIMIT, TEN_MIN)) return send(res, 429, { error: 'Слишком много попыток, подождите 10 минут' });
   const b = await readJson(req);
-  const u = db.prepare('SELECT * FROM users WHERE login = ?').get(str(b.login, 60));
+  const u = await db.one('SELECT * FROM users WHERE lower(login) = lower($1)', [str(b.login, 60)]);
   if (!u || !u.active || !checkPassword(String(b.password || ''), u.pass)) {
     hit('login:' + ip);
     return send(res, 401, { error: 'Неверный логин или пароль' });
   }
-  const token = createSession(u.id);
+  const token = await createSession(u.id);
   const cookie = `sid=${token}; HttpOnly; Path=/; SameSite=Strict; Max-Age=${SESSION_TTL / 1000}${isHttps(req) ? '; Secure' : ''}`;
   send(res, 200, { id: u.id, name: u.name, login: u.login, role: u.role }, { 'Set-Cookie': cookie });
 });
 
 route('POST', /^\/api\/logout$/, async (req, res) => {
   const token = parseCookies(req).sid;
-  if (token) db.prepare('DELETE FROM sessions WHERE token = ?').run(token);
+  if (token) await db.run('DELETE FROM sessions WHERE token = $1', [token]);
   send(res, 200, { ok: true }, { 'Set-Cookie': 'sid=; HttpOnly; Path=/; SameSite=Strict; Max-Age=0' });
 });
 
@@ -294,97 +237,109 @@ route('GET', /^\/api\/me$/, async (req, res, user) => send(res, 200, user), 'any
 route('GET', /^\/api\/admin\/requests$/, async (req, res, user, m, url) => {
   const where = [];
   const args = [];
-  if (user.role !== 'admin') { where.push('r.manager_id = ?'); args.push(user.id); }
+  const arg = (v) => { args.push(v); return '$' + args.length; };
+  if (user.role !== 'admin') where.push('r.manager_id = ' + arg(user.id));
   const status = url.searchParams.get('status');
-  if (STATUSES.includes(status)) { where.push('r.status = ?'); args.push(status); }
+  if (STATUSES.includes(status)) where.push('r.status = ' + arg(status));
   const manager = url.searchParams.get('manager');
   if (manager === 'none') where.push('r.manager_id IS NULL');
-  else if (manager && /^\d+$/.test(manager)) { where.push('r.manager_id = ?'); args.push(Number(manager)); }
+  else if (manager && /^\d+$/.test(manager)) where.push('r.manager_id = ' + arg(Number(manager)));
   const q = str(url.searchParams.get('q'), 100);
   if (q) {
-    where.push('(r.name LIKE ? OR r.phone LIKE ? OR r.email LIKE ? OR r.company LIKE ? OR r.message LIKE ? OR CAST(r.id AS TEXT) = ?)');
-    const like = `%${q}%`;
-    args.push(like, like, like, like, like, q.replace('#', ''));
+    // символы % и _ в поиске — буквально, а не как шаблон
+    const like = arg('%' + q.replace(/[\\%_]/g, (c) => '\\' + c) + '%');
+    const idq = arg(q.replace('#', ''));
+    where.push(`(r.name ILIKE ${like} OR r.phone ILIKE ${like} OR r.email ILIKE ${like} OR r.company ILIKE ${like} OR r.message ILIKE ${like} OR r.id::text = ${idq})`);
   }
-  const rows = db.prepare(`
+  const rows = await db.all(`
     SELECT r.*, u.name AS manager_name,
-      (SELECT COUNT(*) FROM events e WHERE e.request_id = r.id AND e.kind = 'note') AS notes
+      (SELECT count(*)::int FROM events e WHERE e.request_id = r.id AND e.kind = 'note') AS notes
     FROM requests r LEFT JOIN users u ON u.id = r.manager_id
     ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
-    ORDER BY CASE r.status WHEN 'new' THEN 0 ELSE 1 END, r.created_at DESC, r.id DESC
-    LIMIT 500`).all(...args);
+    ORDER BY (r.status = 'new') DESC, r.created_at DESC, r.id DESC
+    LIMIT 500`, args);
   send(res, 200, rows);
 }, 'any');
 
 route('GET', /^\/api\/admin\/requests\/(\d+)$/, async (req, res, user, m) => {
-  const r = db.prepare('SELECT r.*, u.name AS manager_name FROM requests r LEFT JOIN users u ON u.id = r.manager_id WHERE r.id = ?').get(Number(m[1]));
+  const r = await db.one('SELECT r.*, u.name AS manager_name FROM requests r LEFT JOIN users u ON u.id = r.manager_id WHERE r.id = $1', [Number(m[1])]);
   if (!r || !canSee(user, r)) return send(res, 404, { error: 'Не найдено' });
-  r.events = db.prepare(`SELECT e.*, u.name AS user_name FROM events e LEFT JOIN users u ON u.id = e.user_id
-    WHERE e.request_id = ? ORDER BY e.created_at, e.id`).all(r.id);
+  r.events = await db.all(`SELECT e.*, u.name AS user_name FROM events e LEFT JOIN users u ON u.id = e.user_id
+    WHERE e.request_id = $1 ORDER BY e.created_at, e.id`, [r.id]);
   send(res, 200, r);
 }, 'any');
 
 route('PATCH', /^\/api\/admin\/requests\/(\d+)$/, async (req, res, user, m) => {
   const id = Number(m[1]);
-  const r = db.prepare('SELECT * FROM requests WHERE id = ?').get(id);
-  if (!r || !canSee(user, r)) return send(res, 404, { error: 'Не найдено' });
   const b = await readJson(req);
+  if ('manager_id' in b && user.role !== 'admin') return send(res, 403, { error: 'Распределять заявки может только администратор' });
+  if ('status' in b && !STATUSES.includes(b.status)) return send(res, 400, { error: 'Неизвестный статус' });
 
-  if ('manager_id' in b) {
-    if (user.role !== 'admin') return send(res, 403, { error: 'Распределять заявки может только администратор' });
-    const mid = b.manager_id === null || b.manager_id === '' ? null : Number(b.manager_id);
-    let mgr = null;
-    if (mid !== null) {
-      mgr = db.prepare('SELECT id, name FROM users WHERE id = ? AND active = 1').get(mid);
-      if (!mgr) return send(res, 400, { error: 'Менеджер не найден' });
+  // изменение и запись в историю — одной транзакцией; строка заявки блокируется на время правки,
+  // чтобы два человека одновременно не перезаписали друг друга
+  const error = await db.tx(async (t) => {
+    const r = await t.one('SELECT * FROM requests WHERE id = $1 FOR UPDATE', [id]);
+    if (!r || !canSee(user, r)) return [404, 'Не найдено'];
+
+    if ('manager_id' in b) {
+      const mid = b.manager_id === null || b.manager_id === '' ? null : Number(b.manager_id);
+      let mgr = null;
+      if (mid !== null) {
+        mgr = await t.one('SELECT id, name FROM users WHERE id = $1 AND active', [mid]);
+        if (!mgr) return [400, 'Менеджер не найден'];
+      }
+      if (mid !== r.manager_id) {
+        const nextStatus = mid !== null && r.status === 'new' ? 'assigned' : (mid === null && r.status === 'assigned' ? 'new' : r.status);
+        await t.run('UPDATE requests SET manager_id = $1, status = $2, updated_at = now() WHERE id = $3', [mid, nextStatus, id]);
+        await logEvent(t, id, user.id, 'assign', mgr ? `Назначен менеджер: ${mgr.name}` : 'Менеджер снят');
+        r.status = nextStatus;
+      }
     }
-    if (mid !== r.manager_id) {
-      const nextStatus = mid !== null && r.status === 'new' ? 'assigned' : (mid === null && r.status === 'assigned' ? 'new' : r.status);
-      db.prepare("UPDATE requests SET manager_id = ?, status = ?, updated_at = datetime('now') WHERE id = ?").run(mid, nextStatus, id);
-      logEvent(id, user.id, 'assign', mgr ? `Назначен менеджер: ${mgr.name}` : 'Менеджер снят');
-      r.status = nextStatus;
+    if ('status' in b && b.status !== r.status) {
+      await t.run('UPDATE requests SET status = $1, updated_at = now() WHERE id = $2', [b.status, id]);
+      await logEvent(t, id, user.id, 'status', b.status);
     }
-  }
-  if ('status' in b) {
-    if (!STATUSES.includes(b.status)) return send(res, 400, { error: 'Неизвестный статус' });
-    if (b.status !== r.status) {
-      db.prepare("UPDATE requests SET status = ?, updated_at = datetime('now') WHERE id = ?").run(b.status, id);
-      logEvent(id, user.id, 'status', b.status);
-    }
-  }
+    return null;
+  });
+  if (error) return send(res, error[0], { error: error[1] });
   send(res, 200, { ok: true });
 }, 'any');
 
 route('POST', /^\/api\/admin\/requests\/(\d+)\/notes$/, async (req, res, user, m) => {
   const id = Number(m[1]);
-  const r = db.prepare('SELECT * FROM requests WHERE id = ?').get(id);
+  const r = await db.one('SELECT id, manager_id FROM requests WHERE id = $1', [id]);
   if (!r || !canSee(user, r)) return send(res, 404, { error: 'Не найдено' });
   const b = await readJson(req);
   const text = str(b.text, 3000);
   if (!text) return send(res, 400, { error: 'Пустая заметка' });
-  logEvent(id, user.id, 'note', text);
-  db.prepare("UPDATE requests SET updated_at = datetime('now') WHERE id = ?").run(id);
+  await db.tx(async (t) => {
+    await logEvent(t, id, user.id, 'note', text);
+    await t.run('UPDATE requests SET updated_at = now() WHERE id = $1', [id]);
+  });
   send(res, 201, { ok: true });
 }, 'any');
 
 route('DELETE', /^\/api\/admin\/requests\/(\d+)$/, async (req, res, user, m) => {
-  db.prepare('DELETE FROM requests WHERE id = ?').run(Number(m[1]));
+  await db.run('DELETE FROM requests WHERE id = $1', [Number(m[1])]);
   send(res, 200, { ok: true });
 }, 'admin');
 
 route('GET', /^\/api\/admin\/stats$/, async (req, res, user) => {
-  const own = user.role === 'admin' ? '' : 'WHERE manager_id = ' + Number(user.id);
-  const rows = db.prepare(`SELECT status, COUNT(*) AS n FROM requests ${own} GROUP BY status`).all();
+  const isAdmin = user.role === 'admin';
+  const rows = await db.all(
+    `SELECT status, count(*)::int AS n FROM requests ${isAdmin ? '' : 'WHERE manager_id = $1'} GROUP BY status`,
+    isAdmin ? [] : [user.id]);
   const out = { total: 0 };
   STATUSES.forEach((s) => { out[s] = 0; });
   rows.forEach((r) => { out[r.status] = r.n; out.total += r.n; });
-  out.unassigned = user.role === 'admin' ? db.prepare('SELECT COUNT(*) AS n FROM requests WHERE manager_id IS NULL').get().n : 0;
+  out.unassigned = isAdmin ? (await db.one('SELECT count(*)::int AS n FROM requests WHERE manager_id IS NULL')).n : 0;
   send(res, 200, out);
 }, 'any');
 
 route('GET', /^\/api\/admin\/export\.csv$/, async (req, res) => {
-  const rows = db.prepare(`SELECT r.id, r.created_at, r.name, r.company, r.phone, r.email, r.service, r.message, r.status, u.name AS manager
-    FROM requests r LEFT JOIN users u ON u.id = r.manager_id ORDER BY r.id DESC`).all();
+  const rows = await db.all(`SELECT r.id, to_char(r.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI') AS created_at,
+      r.name, r.company, r.phone, r.email, r.service, r.message, r.status, u.name AS manager
+    FROM requests r LEFT JOIN users u ON u.id = r.manager_id ORDER BY r.id DESC`);
   const head = ['ID', 'Дата (UTC)', 'Имя', 'Компания', 'Телефон', 'Email', 'Услуга', 'Сообщение', 'Статус', 'Менеджер'];
   const esc = (v) => {
     let s = String(v == null ? '' : v);
@@ -404,10 +359,10 @@ route('GET', /^\/api\/admin\/export\.csv$/, async (req, res) => {
 
 // --- пользователи (менеджеры) ---
 route('GET', /^\/api\/admin\/users$/, async (req, res, user) => {
-  const rows = db.prepare(`SELECT u.id, u.name, u.login, u.role, u.contact, u.active, u.created_at,
-      (SELECT COUNT(*) FROM requests r WHERE r.manager_id = u.id AND r.status IN ('assigned','work')) AS open_count,
-      (SELECT COUNT(*) FROM requests r WHERE r.manager_id = u.id) AS total_count
-    FROM users u ORDER BY u.active DESC, u.role, u.name`).all();
+  const rows = await db.all(`SELECT u.id, u.name, u.login, u.role, u.contact, u.active, u.created_at,
+      (SELECT count(*)::int FROM requests r WHERE r.manager_id = u.id AND r.status IN ('assigned', 'work')) AS open_count,
+      (SELECT count(*)::int FROM requests r WHERE r.manager_id = u.id) AS total_count
+    FROM users u ORDER BY u.active DESC, u.role, u.name`);
   send(res, 200, user.role === 'admin' ? rows : rows.map(({ id, name, role, active }) => ({ id, name, role, active })));
 }, 'any');
 
@@ -417,38 +372,47 @@ route('POST', /^\/api\/admin\/users$/, async (req, res) => {
   const role = b.role === 'admin' ? 'admin' : 'manager';
   if (!name || !/^[a-zA-Z0-9._-]{3,40}$/.test(login)) return send(res, 400, { error: 'Укажите имя и логин (латиница, цифры, . _ -, от 3 символов)' });
   if (pw.length < 8) return send(res, 400, { error: 'Пароль — минимум 8 символов' });
-  if (db.prepare('SELECT 1 FROM users WHERE login = ?').get(login)) return send(res, 409, { error: 'Такой логин уже есть' });
-  const info = db.prepare('INSERT INTO users (name, login, pass, role, contact) VALUES (?, ?, ?, ?, ?)').run(name, login, hashPassword(pw), role, str(b.contact, 120));
-  send(res, 201, { id: Number(info.lastInsertRowid) });
+  try {
+    const row = await db.one('INSERT INTO users (name, login, pass, role, contact) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+      [name, login, hashPassword(pw), role, str(b.contact, 120)]);
+    send(res, 201, { id: row.id });
+  } catch (e) {
+    if (e.code === '23505') return send(res, 409, { error: 'Такой логин уже есть' }); // нарушение уникальности
+    throw e;
+  }
 }, 'admin');
 
 route('PATCH', /^\/api\/admin\/users\/(\d+)$/, async (req, res, user, m) => {
   const id = Number(m[1]);
-  const u = db.prepare('SELECT * FROM users WHERE id = ?').get(id);
-  if (!u) return send(res, 404, { error: 'Не найдено' });
   const b = await readJson(req);
   if (id === user.id && (b.active === false || b.role === 'manager')) return send(res, 400, { error: 'Нельзя отключить или понизить самого себя' });
-  if ('name' in b && str(b.name, 80)) db.prepare('UPDATE users SET name = ? WHERE id = ?').run(str(b.name, 80), id);
-  if ('contact' in b) db.prepare('UPDATE users SET contact = ? WHERE id = ?').run(str(b.contact, 120), id);
-  if ('role' in b && ['admin', 'manager'].includes(b.role)) db.prepare('UPDATE users SET role = ? WHERE id = ?').run(b.role, id);
-  if ('active' in b) {
-    db.prepare('UPDATE users SET active = ? WHERE id = ?').run(b.active ? 1 : 0, id);
-    if (!b.active) db.prepare('DELETE FROM sessions WHERE user_id = ?').run(id);
-  }
-  if (b.password) {
-    if (String(b.password).length < 8) return send(res, 400, { error: 'Пароль — минимум 8 символов' });
-    db.prepare('UPDATE users SET pass = ? WHERE id = ?').run(hashPassword(String(b.password)), id);
-    db.prepare('DELETE FROM sessions WHERE user_id = ? AND user_id != ?').run(id, user.id);
-  }
+  if (b.password && String(b.password).length < 8) return send(res, 400, { error: 'Пароль — минимум 8 символов' });
+  const found = await db.tx(async (t) => {
+    const u = await t.one('SELECT id FROM users WHERE id = $1 FOR UPDATE', [id]);
+    if (!u) return false;
+    if ('name' in b && str(b.name, 80)) await t.run('UPDATE users SET name = $1 WHERE id = $2', [str(b.name, 80), id]);
+    if ('contact' in b) await t.run('UPDATE users SET contact = $1 WHERE id = $2', [str(b.contact, 120), id]);
+    if ('role' in b && ['admin', 'manager'].includes(b.role)) await t.run('UPDATE users SET role = $1 WHERE id = $2', [b.role, id]);
+    if ('active' in b) {
+      await t.run('UPDATE users SET active = $1 WHERE id = $2', [!!b.active, id]);
+      if (!b.active) await t.run('DELETE FROM sessions WHERE user_id = $1', [id]);
+    }
+    if (b.password) {
+      await t.run('UPDATE users SET pass = $1 WHERE id = $2', [hashPassword(String(b.password)), id]);
+      if (id !== user.id) await t.run('DELETE FROM sessions WHERE user_id = $1', [id]);
+    }
+    return true;
+  });
+  if (!found) return send(res, 404, { error: 'Не найдено' });
   send(res, 200, { ok: true });
 }, 'admin');
 
 route('POST', /^\/api\/admin\/password$/, async (req, res, user) => {
   const b = await readJson(req);
-  const u = db.prepare('SELECT pass FROM users WHERE id = ?').get(user.id);
+  const u = await db.one('SELECT pass FROM users WHERE id = $1', [user.id]);
   if (!checkPassword(String(b.old || ''), u.pass)) return send(res, 400, { error: 'Текущий пароль неверен' });
   if (String(b.password || '').length < 8) return send(res, 400, { error: 'Новый пароль — минимум 8 символов' });
-  db.prepare('UPDATE users SET pass = ? WHERE id = ?').run(hashPassword(String(b.password)), user.id);
+  await db.run('UPDATE users SET pass = $1 WHERE id = $2', [hashPassword(String(b.password)), user.id]);
   send(res, 200, { ok: true });
 }, 'any');
 
@@ -512,7 +476,7 @@ const server = http.createServer(async (req, res) => {
         if (!m) continue;
         let user = null;
         if (r.auth) {
-          user = getUser(req);
+          user = await getUser(req);
           if (!user) return send(res, 401, { error: 'Требуется вход' });
           if (r.auth === 'admin' && user.role !== 'admin') return send(res, 403, { error: 'Только для администратора' });
         }
@@ -528,6 +492,47 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => {
-  console.log(`CTGJ: сайт — http://localhost:${PORT}  |  админ-панель — http://localhost:${PORT}/admin/`);
+/* ================= Запуск ================= */
+async function main() {
+  await db.connect();
+  await db.migrate();
+  await db.importSqliteIfNeeded();
+
+  // CLI: смена пароля
+  if (process.argv[2] === 'set-password') {
+    const [, , , login, pw] = process.argv;
+    if (!login || !pw || pw.length < 8) {
+      console.error('Использование: node server.js set-password <логин> <пароль от 8 символов>');
+    } else {
+      const n = await db.run('UPDATE users SET pass = $1 WHERE lower(login) = lower($2)', [hashPassword(pw), login]);
+      console.log(n ? `Пароль для «${login}» обновлён.` : `Пользователь «${login}» не найден.`);
+    }
+    await db.close();
+    process.exit(0);
+  }
+
+  await ensureAdmin();
+  setInterval(() => db.run('DELETE FROM sessions WHERE expires_at < now()').catch(() => {}), 3600 * 1000).unref();
+
+  server.listen(PORT, () => {
+    console.log(`CTGJ: сайт — http://localhost:${PORT}  |  админ-панель — http://localhost:${PORT}/admin/`);
+  });
+}
+
+// аккуратное завершение: закрыть соединения и локальную базу
+let stopping = false;
+async function shutdown() {
+  if (stopping) return;
+  stopping = true;
+  server.close();
+  await db.close();
+  process.exit(0);
+}
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
+
+main().catch(async (e) => {
+  console.error('Не удалось запустить сервер:', e.message || e);
+  await db.close();
+  process.exit(1);
 });

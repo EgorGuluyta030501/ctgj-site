@@ -59,10 +59,11 @@
     return data;
   }
 
-  // даты из SQLite приходят в UTC: «2026-10-01 12:00:00»
+  // даты приходят из PostgreSQL в ISO-формате с часовым поясом
   function fmtDate(s, withTime = true) {
     if (!s) return '';
-    const d = new Date(s.replace(' ', 'T') + 'Z');
+    const d = new Date(s);
+    if (isNaN(d)) return '';
     return d.toLocaleString('ru-RU', withTime
       ? { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }
       : { day: '2-digit', month: '2-digit', year: 'numeric' });

@@ -84,6 +84,26 @@
   }
 
   applyLang(lang);
+
+  /* ================= Тема: тёмная / светлая ================= */
+  const themeSwitch = $('#theme-switch');
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  function setTheme(theme, animate) {
+    const light = theme === 'light';
+    if (animate && !reduced) {
+      document.body.classList.add('theme-anim');
+      setTimeout(() => document.body.classList.remove('theme-anim'), 600);
+    }
+    if (light) document.documentElement.setAttribute('data-theme', 'light');
+    else document.documentElement.removeAttribute('data-theme');
+    themeSwitch.setAttribute('aria-checked', String(light));
+    if (themeMeta) themeMeta.setAttribute('content', light ? '#f6f1e8' : '#07080f');
+    store.set('ctgj-theme', theme);
+  }
+  setTheme(document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark', false);
+  themeSwitch.addEventListener('click', () => {
+    setTheme(themeSwitch.getAttribute('aria-checked') === 'true' ? 'dark' : 'light', true);
+  });
   $('#year').textContent = new Date().getFullYear();
 
   /* ================= Прелоадер с драконом ================= */
