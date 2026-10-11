@@ -36,16 +36,31 @@
     return LAYERS[0];
   }
 
+  /* крупные фонарики держим у краёв экрана, подальше от колонок текста;
+     по центру летят только мелкие и бледные дальние */
+  function pickX(L) {
+    const far = L === LAYERS[0];
+    if (far && Math.random() < 0.35) return rand(0.08, 0.92) * W;
+    // поля по бокам от колонки контента (та же сетка, что в CSS: max 1280px + отступы)
+    const gutter = Math.min(48, Math.max(16, W * 0.04));
+    const contentLeft = Math.max(gutter, (W - 1280) / 2 + gutter);
+    if (contentLeft >= 60) {
+      return Math.random() < 0.5 ? rand(14, contentLeft - 26) : rand(W - contentLeft + 26, W - 14);
+    }
+    // узкий экран: полей нет — держимся самого края
+    return Math.random() < 0.5 ? rand(0.01, 0.1) * W : rand(0.9, 0.99) * W;
+  }
+
   function newLantern(initial) {
     const L = pickLayer();
     return {
       L,
-      x: rand(0.03, 0.97) * W,
+      x: pickX(L),
       y: initial ? rand(0, H) : H + rand(30, 160),
       s: rand(L.size[0], L.size[1]),
       v: rand(L.speed[0], L.speed[1]),
       ph: rand(0, TAU),
-      sway: rand(6, 18),
+      sway: L === LAYERS[0] ? rand(6, 16) : rand(3, 8), // крупные качаются слабо — не заплывают на текст
       flick: rand(2, 5),
       hue: rand(0, 1), // от жёлто-оранжевого к красному
     };
@@ -58,9 +73,10 @@
     canvas.width = Math.round(W * dpr);
     canvas.height = Math.round(H * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const count = Math.round(Math.min(22, Math.max(9, W / 68)));
+    // примерно вдвое реже, чем раньше: фон, а не главный герой
+    const count = Math.round(Math.min(11, Math.max(4, W / 135)));
     lanterns = Array.from({ length: count }, () => newLantern(true));
-    sparks = Array.from({ length: Math.round(count * 1.6) }, () => newSpark(true));
+    sparks = Array.from({ length: Math.round(count * 1.3) }, () => newSpark(true));
   }
 
   function newSpark(initial) {
@@ -77,7 +93,8 @@
   /* небесный фонарик: купол шире сверху, светящееся отверстие снизу */
   function drawLantern(l, flick) {
     const s = l.s;
-    const a = l.L.alpha;
+    // на светлом фоне фонарики прозрачнее, чтобы не спорить с текстом
+    const a = l.L.alpha * (light ? 0.62 : 0.9);
     const tilt = Math.sin(time * 0.8 + l.ph) * 0.08;
     const x = l.x + Math.sin(time * 0.5 + l.ph) * l.sway;
     const y = l.y;
@@ -85,7 +102,7 @@
     // ореол
     const glowR = s * (light ? 2.4 : 3.2);
     const g = ctx.createRadialGradient(x, y + s * 0.3, 0, x, y + s * 0.3, glowR);
-    g.addColorStop(0, `rgba(255, ${light ? 140 : 170}, ${light ? 50 : 70}, ${(light ? 0.32 : 0.35) * a * flick})`);
+    g.addColorStop(0, `rgba(255, ${light ? 140 : 170}, ${light ? 50 : 70}, ${(light ? 0.2 : 0.32) * a * flick})`);
     g.addColorStop(1, 'rgba(255, 120, 40, 0)');
     ctx.fillStyle = g;
     ctx.fillRect(x - glowR, y + s * 0.3 - glowR, glowR * 2, glowR * 2);

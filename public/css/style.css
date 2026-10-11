@@ -47,8 +47,8 @@
   --bg-3: #fffaf2;
   --ink: #1f1913;
   --ink-rgb: 31, 25, 19;
-  --muted: #6b6157;
-  --dim: #958b80;
+  --muted: #51483f;
+  --dim: #776d63;
   --line: rgba(31, 25, 19, 0.12);
   --page-bg: #f6f1e8;
   --soft: rgba(31, 25, 19, 0.04);
@@ -83,6 +83,13 @@
   --gold-2: #f7d58b;
   color: var(--ink);
 }
+
+/* светлая тема: основной текст абзацев плотнее — лучше читается на светлом фоне */
+:root[data-theme='light'] .about__text p,
+:root[data-theme='light'] .project:not(.project--red):not(.project--gold) p { color: rgba(var(--ink-rgb), 0.88); }
+:root[data-theme='light'] .about__text .lead { color: var(--ink); }
+:root[data-theme='light'] .section__label,
+:root[data-theme='light'] .contacts__list dt { color: #5d544b; }
 
 /* логотип: белый на тёмном, тёмный — на светлой шапке и в подвале светлой темы */
 .logo-dark { display: none !important; }
