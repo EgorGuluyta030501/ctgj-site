@@ -1,0 +1,6 @@
+{"width":1440,"height":900,"steps":[
+ {"goto":"http://localhost:3000/?lang=ru&intro=0","wait":2500},
+ {"shot":"example-hero.jpg"},
+ {"eval":"window.scrollTo(0, document.querySelector('#projects').offsetTop - 40)","wait":1800},
+ {"shot":"example-projects.jpg"}
+]}
