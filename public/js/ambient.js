@@ -95,64 +95,86 @@
     };
   }
 
-  /* небесный фонарик: купол шире сверху, светящееся отверстие снизу */
+  /* круглый красный китайский фонарь: шар, золотые крышки, кисточка, 福 на крупных */
+  const CHARS = ['福', '福', '春', '吉'];
   function drawLantern(l, flick) {
     const s = l.s;
     // на светлом фоне фонарики прозрачнее, чтобы не спорить с текстом
     const a = l.L.alpha * (light ? 0.62 : 0.9);
-    const tilt = Math.sin(time * 0.8 + l.ph) * 0.08;
+    const tilt = Math.sin(time * 0.8 + l.ph) * 0.07;
     const x = l.x + Math.sin(time * 0.5 + l.ph) * l.sway;
     const y = l.y;
+    const r = s * 0.62;          // радиус шара (по ширине)
+    const ry = r * 0.88;         // чуть приплюснут, как настоящий фонарь
 
     // ореол
-    const glowR = s * (light ? 2.4 : 3.2);
-    const g = ctx.createRadialGradient(x, y + s * 0.3, 0, x, y + s * 0.3, glowR);
-    g.addColorStop(0, `rgba(255, ${light ? 140 : 170}, ${light ? 50 : 70}, ${(light ? 0.2 : 0.32) * a * flick})`);
-    g.addColorStop(1, 'rgba(255, 120, 40, 0)');
+    const glowR = s * (light ? 2.2 : 3);
+    const g = ctx.createRadialGradient(x, y, 0, x, y, glowR);
+    g.addColorStop(0, `rgba(255, ${light ? 110 : 120}, 50, ${(light ? 0.2 : 0.34) * a * flick})`);
+    g.addColorStop(1, 'rgba(255, 80, 30, 0)');
     ctx.fillStyle = g;
-    ctx.fillRect(x - glowR, y + s * 0.3 - glowR, glowR * 2, glowR * 2);
+    ctx.fillRect(x - glowR, y - glowR, glowR * 2, glowR * 2);
 
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(tilt);
     ctx.globalAlpha = a;
 
-    const w = s * 0.6, h = s * 1.35; // выше и стройнее — как настоящий небесный фонарь
-    // корпус: от светлой середины к красным краям
-    const body = ctx.createLinearGradient(-w, 0, w, 0);
-    const edge = l.hue > 0.5 ? '#c4281a' : '#d9561f';
-    body.addColorStop(0, edge);
-    body.addColorStop(0.5, `rgb(255, ${Math.round(lerp(190, 225, flick - 0.7))}, ${Math.round(lerp(90, 130, flick - 0.7))})`);
-    body.addColorStop(1, edge);
+    // шнур сверху
+    ctx.strokeStyle = 'rgba(168, 118, 42, 0.8)';
+    ctx.lineWidth = Math.max(0.6, s * 0.03);
     ctx.beginPath();
-    ctx.moveTo(-w * 0.62, h * 0.5);
-    ctx.bezierCurveTo(-w * 0.95, h * 0.05, -w * 1.02, -h * 0.45, -w * 0.55, -h * 0.55);
-    ctx.quadraticCurveTo(0, -h * 0.72, w * 0.55, -h * 0.55);
-    ctx.bezierCurveTo(w * 1.02, -h * 0.45, w * 0.95, h * 0.05, w * 0.62, h * 0.5);
-    ctx.closePath();
+    ctx.moveTo(0, -ry - s * 0.12);
+    ctx.lineTo(0, -ry - s * 0.4);
+    ctx.stroke();
+
+    // шар: светлая середина → красный → тёмно-красные края
+    const body = ctx.createRadialGradient(-r * 0.3, -ry * 0.35, r * 0.1, 0, 0, r * 1.05);
+    body.addColorStop(0, `rgb(255, ${Math.round(lerp(130, 170, flick - 0.7))}, 80)`);
+    body.addColorStop(0.45, l.hue > 0.5 ? '#e0321f' : '#e84a24');
+    body.addColorStop(1, '#7a0a06');
+    ctx.beginPath();
+    ctx.ellipse(0, 0, r, ry, 0, 0, TAU);
     ctx.fillStyle = body;
     ctx.fill();
 
-    // рёбра каркаса
-    if (s > 11) {
-      ctx.strokeStyle = 'rgba(120, 30, 10, 0.35)';
-      ctx.lineWidth = Math.max(0.6, s * 0.04);
-      ctx.beginPath();
-      ctx.moveTo(0, -h * 0.62); ctx.lineTo(0, h * 0.5);
-      ctx.moveTo(-w * 0.5, -h * 0.5); ctx.quadraticCurveTo(-w * 0.6, 0, -w * 0.38, h * 0.5);
-      ctx.moveTo(w * 0.5, -h * 0.5); ctx.quadraticCurveTo(w * 0.6, 0, w * 0.38, h * 0.5);
-      ctx.stroke();
+    // рёбра-меридианы
+    if (s > 10) {
+      ctx.strokeStyle = 'rgba(90, 10, 5, 0.35)';
+      ctx.lineWidth = Math.max(0.5, s * 0.025);
+      for (const k of [0.25, 0.6]) {
+        ctx.beginPath();
+        ctx.ellipse(0, 0, r * k, ry, 0, 0, TAU);
+        ctx.stroke();
+      }
     }
 
-    // нижний обод и огонь внутри
+    // золотой иероглиф на крупных фонарях
+    if (s > 22) {
+      ctx.fillStyle = 'rgba(255, 214, 130, 0.95)';
+      ctx.font = `${Math.round(r * 0.95)}px 'Ma Shan Zheng', 'Noto Sans SC', serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(CHARS[Math.floor(l.hue * CHARS.length) % CHARS.length], 0, r * 0.06);
+    }
+
+    // золотые крышки сверху и снизу
+    const capW = r * 0.95, capH = Math.max(1.5, s * 0.11);
+    const cap = ctx.createLinearGradient(0, -capH / 2, 0, capH / 2);
+    cap.addColorStop(0, '#f7d58b');
+    cap.addColorStop(1, '#a8762a');
+    ctx.fillStyle = cap;
+    ctx.fillRect(-capW / 2, -ry - capH * 0.6, capW, capH);
+    ctx.fillRect(-capW / 2, ry - capH * 0.4, capW, capH);
+
+    // кисточка
+    ctx.strokeStyle = '#c4281a';
+    ctx.lineWidth = Math.max(1, s * 0.09);
+    ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.ellipse(0, h * 0.5, w * 0.62, s * 0.1, 0, 0, TAU);
-    ctx.fillStyle = 'rgba(110, 30, 10, 0.75)';
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(0, h * 0.46, w * 0.32 * flick, s * 0.12 * flick, 0, 0, TAU);
-    ctx.fillStyle = `rgba(255, 245, 190, ${0.9 * flick})`;
-    ctx.fill();
+    ctx.moveTo(0, ry + capH * 0.6);
+    ctx.lineTo(Math.sin(time * 1.6 + l.ph) * s * 0.05, ry + capH * 0.6 + s * 0.38);
+    ctx.stroke();
 
     ctx.restore();
   }

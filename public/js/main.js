@@ -59,6 +59,7 @@
     });
     buildMarquee();
     store.set('ctgj-lang', lang);
+    document.dispatchEvent(new Event('ctgj:lang'));
   }
 
   $$('.lang').forEach((b) => b.addEventListener('click', () => {
@@ -118,11 +119,11 @@
       document.body.classList.add('is-ready');
       startHero();
       initReveal();
-    }, 330);
+    }, 120); // первый экран проявляется под гаснущей заставкой
     setTimeout(() => {
       loader.classList.add('is-done');
       if (introScene) introScene.destroy();
-    }, 760);
+    }, 800);
   }
 
   let introScene = null;
@@ -350,21 +351,8 @@
     $$('[data-split]').forEach((el) => io.observe(el));
   }
 
-  /* ================= Курсор-свечение и «магнитные» кнопки ================= */
+  /* ================= «Магнитные» кнопки и наклон фонарей за курсором ================= */
   if (window.matchMedia('(hover: hover) and (pointer: fine)').matches && !reduced) {
-    const cursor = $('#cursor');
-    let cx = 0, cy = 0, tx = 0, ty = 0;
-    window.addEventListener('mousemove', (e) => {
-      if (!cx && !cy) { cx = e.clientX; cy = e.clientY; document.body.classList.add('has-cursor'); }
-      tx = e.clientX; ty = e.clientY;
-    }, { passive: true });
-    (function loop() {
-      cx += (tx - cx) * 0.12;
-      cy += (ty - cy) * 0.12;
-      cursor.style.transform = `translate(${cx}px, ${cy}px)`;
-      requestAnimationFrame(loop);
-    })();
-
     $$('[data-magnetic]').forEach((el) => {
       el.addEventListener('mousemove', (e) => {
         const r = el.getBoundingClientRect();
@@ -548,4 +536,221 @@
       }
     });
   });
+
+  /* ================= Партнёры ================= */
+  // логотипы — из public/партнеры, список отдаёт partners.json (сервер или сборка GitHub Pages)
+  (async function loadPartners() {
+    const section = $('#partners');
+    const grid = $('#partners-grid');
+    const moreBtn = $('#partners-more');
+    if (!section || !grid) return;
+    let list = [];
+    try {
+      const res = await fetch('партнеры/partners.json', { cache: 'no-cache' });
+      if (res.ok) list = await res.json();
+    } catch (e) { /* нет списка — раздел остаётся скрытым */ }
+    if (!Array.isArray(list) || !list.length) return;
+
+    const LIMIT = 15; // сколько показываем сразу; остальные — по кнопке
+    grid.innerHTML = list.map((p, i) => `
+      <li class="partner${i >= LIMIT ? ' is-hidden' : ''}" data-reveal style="--i:${i % 10}">
+        <img src="партнеры/${encodeURIComponent(p.file)}" alt="${escapeHtml(p.name)}" title="${escapeHtml(p.name)}" loading="lazy">
+      </li>`).join('');
+    section.hidden = false;
+
+    // световое пятно следует за курсором
+    grid.addEventListener('pointermove', (e) => {
+      const tile = e.target.closest('.partner');
+      if (!tile) return;
+      const rect = tile.getBoundingClientRect();
+      tile.style.setProperty('--mx', `${e.clientX - rect.left}px`);
+      tile.style.setProperty('--my', `${e.clientY - rect.top}px`);
+    });
+
+    // плавное появление: вешаем наблюдатель, если раздел уже инициализирован после заставки
+    const io = new IntersectionObserver((entries) => entries.forEach((e) => {
+      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    }), { threshold: 0.1 });
+    $$('[data-reveal], [data-split]', section).forEach((el, k) => {
+      if (el.classList.contains('partner')) el.style.setProperty('--d', Math.min((k % 5) * 0.06, 0.3) + 's');
+      io.observe(el);
+    });
+
+    if (list.length > LIMIT) {
+      moreBtn.hidden = false;
+      let open = false;
+      moreBtn.addEventListener('click', () => {
+        open = !open;
+        $$('.partner', grid).forEach((li, i) => {
+          if (i >= LIMIT) { li.classList.toggle('is-hidden', !open); if (open) li.classList.add('in'); }
+        });
+        moreBtn.textContent = t(open ? 'partners.showLess' : 'partners.showAll');
+        moreBtn.dataset.i18n = open ? 'partners.showLess' : 'partners.showAll';
+      });
+    }
+  })();
+
+  /* ================= Страница проекта ================= */
+  // Открывается по клику на карточку; адрес #project-N, работает кнопка «Назад» браузера.
+  const pview = $('#pview');
+  const pviewBody = $('#pview-body');
+  const projectCards = $$('.project[data-project]');
+  const PROJECT_COUNT = projectCards.length;
+  let currentProject = -1;
+  let pushedProject = false;
+  let projectReturnFocus = null;
+
+  // фото проектов (img/projects); для CC BY-SA обязательна подпись автора
+  const P_PHOTOS = [
+    { src: 'img/projects/p1.jpg', credit: 'The EITI, CC BY-SA 2.0', link: 'https://commons.wikimedia.org/wiki/File:Taganito_Mining_Corp._nickel_ore_conveyor_belts_-_Flickr.jpg' },
+    { src: 'img/projects/p2.jpg' },
+    { src: 'img/projects/p3.jpg' },
+    { src: 'img/projects/p4.jpg' },
+    { src: 'img/projects/p5.jpg', credit: 'Vis M, CC BY-SA 4.0', link: 'https://commons.wikimedia.org/wiki/File:UTM_Autograph.jpg' },
+  ];
+
+  function projectHtml(i) {
+    const k = `prj.${i + 1}`;
+    const e = (key) => escapeHtml(t(key));
+    const photo = P_PHOTOS[i] || {};
+    const credit = photo.credit
+      ? `<figcaption class="pview__credit">Фото: <a href="${photo.link}" target="_blank" rel="noopener">${escapeHtml(photo.credit)}</a></figcaption>`
+      : '';
+    return `
+      <article class="pview__page">
+        <header class="container pview__head">
+          <span class="pview__tag">${e(k + '.tag')}</span>
+          <h2 class="h2 pview__title" id="pview-title">${e(k + '.t')}</h2>
+          <span class="pview__label">${e('prj.task')}</span>
+          <p class="pview__lead">${e(k + '.task')}</p>
+        </header>
+        <section class="pview__split">
+          <figure class="pview__photo">
+            ${photo.src ? `<img src="${photo.src}" alt="${e(k + '.t')}">` : ''}
+            ${credit}
+            <div class="pview__result">
+              <h3>${e('prj.result')}</h3>
+              <p>${e(k + '.result')}</p>
+            </div>
+          </figure>
+          <div class="pview__info">
+            <span class="pview__chip">${e(k + '.tag')}</span>
+            <h3 class="pview__ctx">${e('prj.context')}</h3>
+            <p class="pview__ctx-sub">${e('prj.f1')} · ${e('prj.f2')} · ${e('prj.f3')}</p>
+            <div class="pview__cols">
+              <div><h4><i></i>${e('prj.problem')}</h4><p>${e(k + '.problem')}</p></div>
+              <div><h4><i></i>${e('prj.solution')}</h4><p>${e(k + '.solution')}</p></div>
+            </div>
+            <button class="btn btn--red" type="button" data-pview-request>${e('prj.cta')}</button>
+          </div>
+        </section>
+      </article>`;
+  }
+
+  function renderProject(i, dir) {
+    const old = $('.pview__page', pviewBody);
+    const place = () => {
+      pviewBody.innerHTML = projectHtml(i);
+      $('[data-pview-request]', pviewBody).addEventListener('click', () => openMail('supply'));
+      const page = $('.pview__page', pviewBody);
+      if (dir && !reduced) {
+        page.style.setProperty('--dir', dir > 0 ? '40px' : '-40px');
+        page.classList.add('is-entering');
+        requestAnimationFrame(() => requestAnimationFrame(() => page.classList.remove('is-entering')));
+      }
+    };
+    if (old && dir && !reduced) {
+      old.style.setProperty('--dir', dir > 0 ? '-40px' : '40px');
+      old.classList.add('is-leaving');
+      setTimeout(() => { place(); pview.scrollTop = 0; }, 260);
+    } else {
+      place();
+      pview.scrollTop = 0;
+    }
+  }
+
+  function openProject(i, opts = {}) {
+    i = ((i % PROJECT_COUNT) + PROJECT_COUNT) % PROJECT_COUNT;
+    const wasOpen = !pview.hidden;
+    const dir = wasOpen && currentProject !== i ? (opts.dir || (i > currentProject ? 1 : -1)) : 0;
+    currentProject = i;
+    renderProject(i, dir);
+    const hash = `#project-${i + 1}`;
+    if (opts.push !== false && location.hash !== hash) {
+      if (wasOpen) history.replaceState({ project: i }, '', hash);
+      else { history.pushState({ project: i }, '', hash); pushedProject = true; }
+    }
+    if (!wasOpen) {
+      projectReturnFocus = document.activeElement;
+      pview.hidden = false;
+      document.body.classList.add('pview-open');
+      if (lenis) lenis.stop();
+      requestAnimationFrame(() => pview.classList.add('is-open'));
+      setTimeout(() => $('.pview__back', pview).focus({ preventScroll: true }), 50);
+    }
+  }
+
+  function hideProject() {
+    if (pview.hidden) return;
+    pview.classList.remove('is-open');
+    document.body.classList.remove('pview-open');
+    if (lenis) lenis.start();
+    currentProject = -1;
+    setTimeout(() => { if (currentProject < 0) pview.hidden = true; }, reduced ? 0 : 450);
+    if (projectReturnFocus && projectReturnFocus.focus) projectReturnFocus.focus({ preventScroll: true });
+  }
+
+  function closeProject() {
+    if (pushedProject && history.state && history.state.project !== undefined) {
+      pushedProject = false;
+      history.back(); // уберёт #project-N, popstate закроет страницу
+    } else {
+      history.replaceState(null, '', location.pathname + location.search);
+      hideProject();
+    }
+  }
+
+  projectCards.forEach((card) => {
+    const open = () => openProject(Number(card.dataset.project));
+    card.addEventListener('click', open);
+    card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+  });
+  $$('[data-pclose]', pview).forEach((b) => b.addEventListener('click', closeProject));
+  $('#pview-prev').addEventListener('click', () => openProject(currentProject - 1, { dir: -1 }));
+  $('#pview-next').addEventListener('click', () => openProject(currentProject + 1, { dir: 1 }));
+
+  document.addEventListener('keydown', (e) => {
+    if (pview.hidden || !mail.hidden) return;
+    if (e.key === 'Escape') closeProject();
+    else if (e.key === 'ArrowLeft') openProject(currentProject - 1, { dir: -1 });
+    else if (e.key === 'ArrowRight') openProject(currentProject + 1, { dir: 1 });
+  });
+
+  // свайп влево/вправо на телефоне
+  let touchX = null, touchY = null;
+  pview.addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; touchY = e.touches[0].clientY; }, { passive: true });
+  pview.addEventListener('touchend', (e) => {
+    if (touchX === null) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    const dy = e.changedTouches[0].clientY - touchY;
+    touchX = null;
+    if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) openProject(currentProject + (dx < 0 ? 1 : -1), { dir: dx < 0 ? 1 : -1 });
+  }, { passive: true });
+
+  // адрес #project-N: «Назад»/«Вперёд» в браузере и прямые ссылки
+  function syncFromHash() {
+    const m = /^#project-(\d+)$/.exec(location.hash);
+    if (m && Number(m[1]) >= 1 && Number(m[1]) <= PROJECT_COUNT) openProject(Number(m[1]) - 1, { push: false });
+    else hideProject();
+  }
+  window.addEventListener('popstate', syncFromHash);
+  if (/^#project-\d+$/.test(location.hash)) {
+    // открыли по прямой ссылке — показываем после заставки
+    const waitReady = setInterval(() => {
+      if (document.body.classList.contains('is-ready')) { clearInterval(waitReady); syncFromHash(); }
+    }, 100);
+  }
+
+  // смена языка — перерисовать открытый проект
+  document.addEventListener('ctgj:lang', () => { if (currentProject >= 0) renderProject(currentProject, 0); });
 })();

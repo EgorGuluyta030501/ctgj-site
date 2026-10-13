@@ -19,6 +19,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const db = require('./db');
+const { buildPartners } = require('./scripts/partners');
 
 const PORT = Number(process.env.PORT) || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -425,18 +426,31 @@ const MIME = {
 function serveStatic(req, res, pathname) {
   let rel = decodeURIComponent(pathname);
   if (rel === '/admin') { res.writeHead(301, { Location: '/admin/' }); return res.end(); }
+  // список логотипов партнёров собирается из папки на лету — новые файлы видны сразу
+  if (rel === '/партнеры/partners.json') return send(res, 200, buildPartners());
   if (rel.endsWith('/')) rel += 'index.html';
   const file = path.normalize(path.join(PUBLIC_DIR, rel));
   if (!file.startsWith(PUBLIC_DIR + path.sep)) return send(res, 403, 'Forbidden');
   fs.stat(file, (err, st) => {
     if (err || !st.isFile()) return send(res, 404, 'Not found');
     const ext = path.extname(file).toLowerCase();
+    // HTML, CSS и JS браузер перепроверяет при каждом открытии (после правок сразу видна новая версия);
+    // картинки и видео кешируются на час
+    const revalidate = ext === '.html' || ext === '.css' || ext === '.js';
+    const lastModified = st.mtime.toUTCString();
     const headers = {
       'Content-Type': MIME[ext] || 'application/octet-stream',
       'Content-Length': st.size,
       'Accept-Ranges': 'bytes',
-      'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=3600',
+      'Last-Modified': lastModified,
+      'Cache-Control': revalidate ? 'no-cache' : 'public, max-age=3600',
     };
+    // файл не менялся с прошлого раза — отвечаем 304 без тела
+    const since = Date.parse(req.headers['if-modified-since'] || '');
+    if (since && Math.floor(st.mtimeMs / 1000) * 1000 <= since && !req.headers.range) {
+      res.writeHead(304, { 'Last-Modified': lastModified, 'Cache-Control': headers['Cache-Control'] });
+      return res.end();
+    }
     if (rel.startsWith('/admin/')) { headers['X-Frame-Options'] = 'DENY'; headers['X-Robots-Tag'] = 'noindex'; }
 
     // отдача файла частями (Range) — без неё Safari не воспроизводит видео

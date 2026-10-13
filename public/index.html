@@ -12,7 +12,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Manrope:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Unbounded:wght@400;500;700&display=swap">
   <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Manrope:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Unbounded:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Manrope:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Unbounded:wght@400;500;700&display=swap" rel="stylesheet"></noscript>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=20261013o">
   <script>
     // тема применяется до отрисовки, чтобы не было вспышки тёмной темы
     try { if (localStorage.getItem('ctgj-theme') === 'light') document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {}
@@ -28,12 +28,9 @@
     <p class="loader__tagline" data-i18n="loader.tagline">Снабжение и логистика из Китая</p>
   </div>
   <button class="loader__skip" id="loader-skip" type="button" data-i18n="loader.skip">Пропустить</button>
-  <div class="loader__curtain loader__curtain--top"></div>
-  <div class="loader__curtain loader__curtain--bottom"></div>
 </div>
 
 <div class="progress" id="progress"></div>
-<div class="cursor" id="cursor" aria-hidden="true"></div>
 
 <!-- живой фон секций: поднимающиеся небесные фонарики (js/ambient.js) -->
 <canvas class="ambient" id="ambient" aria-hidden="true"></canvas>
@@ -61,10 +58,10 @@
     </a>
 
     <nav class="nav" id="nav">
-      <a href="#about" class="nav__link"><span class="nav__num">01</span><span data-i18n="nav.about">О компании</span></a>
-      <a href="#services" class="nav__link"><span class="nav__num">02</span><span data-i18n="nav.services">Услуги</span></a>
-      <a href="#projects" class="nav__link"><span class="nav__num">03</span><span data-i18n="nav.projects">Проекты</span></a>
-      <a href="#contacts" class="nav__link"><span class="nav__num">04</span><span data-i18n="nav.contacts">Контакты</span></a>
+      <a href="#about" class="nav__link"><span data-i18n="nav.about">О компании</span></a>
+      <a href="#services" class="nav__link"><span data-i18n="nav.services">Услуги</span></a>
+      <a href="#projects" class="nav__link"><span data-i18n="nav.projects">Проекты</span></a>
+      <a href="#contacts" class="nav__link"><span data-i18n="nav.contacts">Контакты</span></a>
     </nav>
 
     <div class="header__right">
@@ -85,7 +82,7 @@
           <svg viewBox="0 0 30 20"><rect width="30" height="20" fill="#de2910"/><g fill="#ffde00"><path d="M5 2.2l.9 2.8h2.9l-2.4 1.7.9 2.8L5 7.8 2.7 9.5l.9-2.8-2.4-1.7h2.9z"/><circle cx="10" cy="2" r=".8"/><circle cx="12" cy="4" r=".8"/><circle cx="12" cy="7" r=".8"/><circle cx="10" cy="9" r=".8"/></g></svg>
         </button>
       </div>
-      <button class="btn btn--sm btn--red header__cta" type="button" data-open-request data-i18n="cta.request">Оставить заявку</button>
+      <button class="btn btn--sm btn--red header__cta" type="button" data-open-request data-i18n="cta.short">Получить КП</button>
       <button class="burger" id="burger" type="button" aria-label="Меню" aria-expanded="false" aria-controls="nav">
         <span></span><span></span>
       </button>
@@ -101,7 +98,6 @@
     <video class="hero__video" id="hero-video" muted loop playsinline preload="none" poster="video/hero-poster.jpg" aria-hidden="true" tabindex="-1"></video>
     <div class="hero__shade" aria-hidden="true"></div>
     <canvas class="hero__canvas" id="hero-canvas"></canvas>
-    <div class="hero__skyline" data-parallax="0.15"><img src="img/skyline.svg" alt=""></div>
 
     <div class="hanging hanging--left" aria-hidden="true"><div class="mini-lantern"><span>福</span></div></div>
     <div class="hanging hanging--right" aria-hidden="true"><div class="mini-lantern"><span>运</span></div></div>
@@ -109,23 +105,16 @@
     <div class="container hero__inner">
       <div class="hero__badge" data-hero>
         <span class="seal">中国</span>
-        <span data-i18n="hero.badge">Компания в Китае</span>
+        <span data-i18n="hero.badge">Операционный центр в Китае</span>
       </div>
-      <h1 class="hero__title" data-hero data-i18n-html="hero.title_html">Снабжение <br>и логистика <span class="accent">из&nbsp;Китая</span></h1>
-      <p class="hero__text" data-hero data-i18n="hero.text">Находим и проверяем производителей, поставляем оборудование, сырьё и материалы. Одна команда ведёт проект от технического задания до результата.</p>
+      <h1 class="hero__title" data-hero data-i18n-html="hero.title_html">Комплексное снабжение <br>и логистика <span class="accent">из&nbsp;Китая</span></h1>
+      <p class="hero__text" data-hero data-i18n="hero.text">Организуем материально-техническое обеспечение предприятий: поставляем промышленное оборудование, технологические линии, сырьё, химические реагенты и материалы. Сопровождаем проект от проработки технического задания до результата.</p>
       <div class="hero__actions" data-hero>
         <button class="btn btn--red" type="button" data-open-request data-magnetic>
-          <span data-i18n="cta.request">Оставить заявку</span>
+          <span data-i18n="cta.request">Получить коммерческое предложение</span>
           <svg class="btn__icon" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
-        <a class="btn btn--ghost" href="#services" data-magnetic data-i18n="hero.btnServices">Наши услуги</a>
       </div>
-
-      <ul class="hero__stats" data-hero>
-        <li><b>4</b><span data-i18n="hero.s1">направления услуг</span></li>
-        <li><b>1</b><span data-i18n="hero.s2">команда на весь цикл поставки</span></li>
-        <li><b>3</b><span data-i18n="hero.s3">языка: RU · EN · 中文</span></li>
-      </ul>
     </div>
 
     <div class="hero__vertical" aria-hidden="true">中国物流</div>
@@ -142,38 +131,39 @@
     <svg class="cloud cloud--a" aria-hidden="true"><use href="#xiangyun"/></svg>
     <div class="container">
       <div class="section__head">
-        <span class="section__num"><i>一</i>01</span>
         <span class="section__label" data-i18n="about.label">О компании</span>
       </div>
 
       <div class="about__grid">
-        <h2 class="h2" data-split data-i18n="about.title">Превращаем задачу клиента в чётко выстроенный процесс</h2>
+        <h2 class="h2" data-split data-i18n="about.title">Превращаем задачу в результат</h2>
         <div class="about__text">
           <p class="lead" data-reveal data-i18n-html="about.p1_html"><b>CTGJ</b> — торгово-логистическая компания, специализирующаяся на комплексном снабжении предприятий и компаний, а также организации международной логистики из Китая.</p>
-          <p data-reveal data-i18n="about.p2">Каждую поставленную клиентом задачу мы превращаем в чётко выстроенный и управляемый процесс, сопровождая проект на всём пути — от первоначального технического задания до достижения необходимого результата.</p>
-          <p data-reveal data-i18n="about.p3">Наша работа включает поиск и проверку производителей, поставку промышленного оборудования и технологических линий, химических реагентов, сырья и других материалов, необходимых для производственной деятельности.</p>
-          <p data-reveal data-i18n="about.p4">Все этапы объединены в единую систему и находятся под контролем одной команды. Это позволяет сократить количество посредников, снизить риски, сделать ход поставки понятным, а сроки и расходы — прогнозируемыми.</p>
+          <p data-reveal data-i18n="about.p2">Команда CTGJ координирует взаимодействие между заказчиками, производителями, складами и логистическими операторами.</p>
+          <p data-reveal data-i18n="about.p3">Все этапы объединены в единую систему и находятся под централизованным управлением одной команды.</p>
         </div>
       </div>
 
-      <ul class="adv">
-        <li class="adv__item" data-reveal><span class="adv__char">直</span><h3 data-i18n="adv.1.t">Меньше посредников</h3><p data-i18n="adv.1.d">Работаем напрямую с производителями в Китае.</p></li>
-        <li class="adv__item" data-reveal><span class="adv__char">安</span><h3 data-i18n="adv.2.t">Ниже риски</h3><p data-i18n="adv.2.d">Проверяем поставщиков до начала сделки.</p></li>
-        <li class="adv__item" data-reveal><span class="adv__char">明</span><h3 data-i18n="adv.3.t">Понятный ход поставки</h3><p data-i18n="adv.3.d">Вы знаете, на каком этапе ваш заказ.</p></li>
-        <li class="adv__item" data-reveal><span class="adv__char">准</span><h3 data-i18n="adv.4.t">Прогнозируемые сроки</h3><p data-i18n="adv.4.d">И расходы — без неожиданных доплат.</p></li>
-      </ul>
+      <div class="adv-wrap">
+        <h3 class="h3 adv__title" data-split data-i18n="adv.title">Преимущества работы с нами</h3>
+        <ul class="adv">
+          <li class="adv__item" data-reveal><span class="adv__char">直</span><h3 data-i18n="adv.1.t">Меньше посредников</h3><p data-i18n="adv.1.d">Работаем напрямую с производителями в Китае.</p></li>
+          <li class="adv__item" data-reveal><span class="adv__char">安</span><h3 data-i18n="adv.2.t">Снижение рисков</h3><p data-i18n="adv.2.d">Проверяем производителей до заключения сделки.</p></li>
+          <li class="adv__item" data-reveal><span class="adv__char">技</span><h3 data-i18n="adv.3.t">Техническая компетенция</h3><p data-i18n="adv.3.d">Проекты сопровождают специалисты с высшим техническим образованием и опытом работы с промышленным оборудованием.</p></li>
+          <li class="adv__item" data-reveal><span class="adv__char">质</span><h3 data-i18n="adv.4.t">Контроль качества</h3><p data-i18n="adv.4.d">Проверяем соответствие оборудования техническому заданию, комплектность и готовность к отгрузке.</p></li>
+          <li class="adv__item" data-reveal><span class="adv__char">运</span><h3 data-i18n="adv.5.t">Международная логистика</h3><p data-i18n="adv.5.d">Организация мультимодальной перевозки с гарантией соблюдения сроков.</p></li>
+        </ul>
+      </div>
 
       <div class="process" id="process">
         <div class="process__head">
-          <span class="section__label" data-i18n="process.label">Как мы работаем</span>
-          <h3 class="h3" data-split data-i18n="process.title">От технического задания до результата</h3>
+          <h3 class="h3" data-split data-i18n="process.title">Как мы работаем</h3>
         </div>
         <ol class="process__steps">
-          <li class="step" data-reveal><span class="step__dot">一</span><b data-i18n="step.1.t">Техническое задание</b><p data-i18n="step.1.d">Фиксируем задачу, требования и сроки.</p></li>
-          <li class="step" data-reveal><span class="step__dot">二</span><b data-i18n="step.2.t">Поиск и проверка</b><p data-i18n="step.2.d">Подбираем и проверяем производителей.</p></li>
-          <li class="step" data-reveal><span class="step__dot">三</span><b data-i18n="step.3.t">Закупка</b><p data-i18n="step.3.d">Согласуем условия и контролируем производство.</p></li>
-          <li class="step" data-reveal><span class="step__dot">四</span><b data-i18n="step.4.t">Логистика</b><p data-i18n="step.4.d">Организуем международную доставку.</p></li>
-          <li class="step" data-reveal><span class="step__dot">五</span><b data-i18n="step.5.t">Результат</b><p data-i18n="step.5.d">Груз у вас — задача решена.</p></li>
+          <li class="step" data-reveal><span class="step__dot">一</span><b data-i18n="step.1.t">Проработка задачи</b><p data-i18n="step.1.d">Уточняем техническое задание, номенклатуру, объём поставки и сроки.</p></li>
+          <li class="step" data-reveal><span class="step__dot">二</span><b data-i18n="step.2.t">Подбор производителя</b><p data-i18n="step.2.d">Сравниваем предложения, проверяем производителей и согласовываем технические характеристики.</p></li>
+          <li class="step" data-reveal><span class="step__dot">三</span><b data-i18n="step.3.t">Закупка и подготовка к отгрузке</b><p data-i18n="step.3.d">Размещаем заказ, контролируем сроки и качество, готовим оборудование, материалы и документы к отгрузке.</p></li>
+          <li class="step" data-reveal><span class="step__dot">四</span><b data-i18n="step.4.t">Международная доставка</b><p data-i18n="step.4.d">Определяем маршрут и вид транспорта, координируем перевозку до согласованного места назначения.</p></li>
+          <li class="step" data-reveal><span class="step__dot">五</span><b data-i18n="step.5.t">Результат для предприятия</b><p data-i18n="step.5.d">Предприятие получает оборудование и материалы в соответствии с согласованным техзаданием для решения производственных задач.</p></li>
         </ol>
       </div>
     </div>
@@ -186,7 +176,6 @@
     <div class="services__glow" aria-hidden="true"></div>
     <div class="container">
       <div class="section__head">
-        <span class="section__num"><i>二</i>02</span>
         <span class="section__label" data-i18n="services.label">Услуги</span>
       </div>
       <h2 class="h2 h2--center" data-split data-i18n="services.title">Четыре направления — одна команда</h2>
@@ -199,14 +188,14 @@
             <div class="lantern__flip">
               <div class="lantern__face lantern__face--front">
                 <div class="lantern__cap lantern__cap--top"></div>
-                <div class="lantern__ball"><i class="rib r1"></i><i class="rib r2"></i><i class="rib r3"></i><span class="lantern__char">供</span><span class="lantern__num">01</span></div>
+                <div class="lantern__ball"><i class="rib r1"></i><i class="rib r2"></i><i class="rib r3"></i><span class="lantern__char">供</span></div>
                 <div class="lantern__cap lantern__cap--bottom"></div>
                 <div class="lantern__tassel"></div>
               </div>
               <div class="lantern__face lantern__face--back">
                 <div class="lantern__ball lantern__ball--back">
-                  <p data-i18n="svc.1.d">Берём на себя снабжение производства: оборудование, технологические линии, химические реагенты, сырьё и материалы — по единому ТЗ.</p>
-                  <button class="btn btn--xs btn--gold" type="button" data-open-request data-service="supply" data-i18n="svc.order">Заявка</button>
+                  <p data-i18n="svc.1.d">Поставляем оборудование, комплектующие, сырьё, химические реагенты и материалы по техническому заданию.</p>
+                  <button class="btn btn--xs btn--gold" type="button" data-open-request data-service="supply" data-i18n="svc.order">Получить КП</button>
                 </div>
               </div>
             </div>
@@ -220,14 +209,14 @@
             <div class="lantern__flip">
               <div class="lantern__face lantern__face--front">
                 <div class="lantern__cap lantern__cap--top"></div>
-                <div class="lantern__ball"><i class="rib r1"></i><i class="rib r2"></i><i class="rib r3"></i><span class="lantern__char">仓</span><span class="lantern__num">02</span></div>
+                <div class="lantern__ball"><i class="rib r1"></i><i class="rib r2"></i><i class="rib r3"></i><span class="lantern__char">仓</span></div>
                 <div class="lantern__cap lantern__cap--bottom"></div>
                 <div class="lantern__tassel"></div>
               </div>
               <div class="lantern__face lantern__face--back">
-                <div class="lantern__ball lantern__ball--back">
-                  <p data-i18n="svc.2.d">Приёмка, хранение и консолидация грузов в Китае, проверка комплектности и подготовка к отправке.</p>
-                  <button class="btn btn--xs btn--gold" type="button" data-open-request data-service="warehouse" data-i18n="svc.order">Заявка</button>
+                <div class="lantern__ball lantern__ball--back lantern__ball--long">
+                  <p data-i18n="svc.2.d">Склады в Гуанчжоу — около 1 000 м², Гонконге — около 200 м², Пекине — 300 м², Маньчжурии — 1 500 м². Приёмка, хранение, консолидация, упаковка и подготовка к отправке.</p>
+                  <button class="btn btn--xs btn--gold" type="button" data-open-request data-service="warehouse" data-i18n="svc.order">Получить КП</button>
                 </div>
               </div>
             </div>
@@ -241,14 +230,14 @@
             <div class="lantern__flip">
               <div class="lantern__face lantern__face--front">
                 <div class="lantern__cap lantern__cap--top"></div>
-                <div class="lantern__ball"><i class="rib r1"></i><i class="rib r2"></i><i class="rib r3"></i><span class="lantern__char">采</span><span class="lantern__num">03</span></div>
+                <div class="lantern__ball"><i class="rib r1"></i><i class="rib r2"></i><i class="rib r3"></i><span class="lantern__char">采</span></div>
                 <div class="lantern__cap lantern__cap--bottom"></div>
                 <div class="lantern__tassel"></div>
               </div>
               <div class="lantern__face lantern__face--back">
                 <div class="lantern__ball lantern__ball--back">
-                  <p data-i18n="svc.3.d">Поиск и проверка производителей, переговоры, контроль качества и сроков — без лишних посредников.</p>
-                  <button class="btn btn--xs btn--gold" type="button" data-open-request data-service="procurement" data-i18n="svc.order">Заявка</button>
+                  <p data-i18n="svc.3.d">Закупаем оборудование и материалы по поручению заказчика, оплачиваем поставщикам и контролируем исполнение заказов.</p>
+                  <button class="btn btn--xs btn--gold" type="button" data-open-request data-service="procurement" data-i18n="svc.order">Получить КП</button>
                 </div>
               </div>
             </div>
@@ -262,14 +251,14 @@
             <div class="lantern__flip">
               <div class="lantern__face lantern__face--front">
                 <div class="lantern__cap lantern__cap--top"></div>
-                <div class="lantern__ball"><i class="rib r1"></i><i class="rib r2"></i><i class="rib r3"></i><span class="lantern__char">运</span><span class="lantern__num">04</span></div>
+                <div class="lantern__ball"><i class="rib r1"></i><i class="rib r2"></i><i class="rib r3"></i><span class="lantern__char">运</span></div>
                 <div class="lantern__cap lantern__cap--bottom"></div>
                 <div class="lantern__tassel"></div>
               </div>
               <div class="lantern__face lantern__face--back">
                 <div class="lantern__ball lantern__ball--back">
-                  <p data-i18n="svc.4.d">Подбор маршрута и вида транспорта, документы и сопровождение груза до точки назначения.</p>
-                  <button class="btn btn--xs btn--gold" type="button" data-open-request data-service="logistics" data-i18n="svc.order">Заявка</button>
+                  <p data-i18n="svc.4.d">Подбираем маршрут и транспорт, оформляем сопроводительные документы и организуем доставку до места назначения.</p>
+                  <button class="btn btn--xs btn--gold" type="button" data-open-request data-service="logistics" data-i18n="svc.order">Получить КП</button>
                 </div>
               </div>
             </div>
@@ -281,19 +270,17 @@
   </section>
 
   <!-- ========== 03 Проекты: карусель со стрелками ========== -->
-  <!-- ЗАМЕНИТЬ: карточки ниже — примеры направлений. Подставьте реальные проекты заказчика. -->
   <section class="section projects" id="projects">
     <svg class="cloud cloud--c" aria-hidden="true"><use href="#xiangyun"/></svg>
       <div class="container projects__head">
         <div>
           <div class="section__head">
-            <span class="section__num"><i>三</i>03</span>
             <span class="section__label" data-i18n="projects.label">Проекты</span>
           </div>
           <h2 class="h2" data-split data-i18n="projects.title">Задачи, которые мы решаем</h2>
         </div>
         <div class="projects__side">
-          <p class="projects__text" data-i18n="projects.text">Примеры направлений, с которыми к нам приходят предприятия.</p>
+          <p class="projects__text" data-i18n="projects.text">Нажмите на проект, чтобы посмотреть задачу, решение и результат.</p>
           <div class="projects__arrows">
             <button class="arrow" type="button" id="prj-prev" aria-label="Назад" data-i18n-aria="projects.prev" disabled>
               <svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -305,33 +292,60 @@
         </div>
       </div>
       <div class="projects__track" id="projects-track">
-        <article class="project">
-          <span class="project__char">机</span>
-          <span class="project__num">01</span>
-          <span class="project__tag" data-i18n="prj.1.tag">Оборудование</span>
-          <h3 data-i18n="prj.1.t">Поставка технологической линии</h3>
-          <p data-i18n="prj.1.d">Подбор производителя, проверка, закупка и доставка линии под задачи производства.</p>
+        <article class="project" data-project="0" role="button" tabindex="0" aria-label="Поставка технологической линии брикетирования рудного сырья">
+          <div class="project__media">
+            <img src="img/projects/p1.jpg" alt="" loading="lazy">
+            <span class="project__tag" data-i18n="prj.1.tag">Оборудование</span>
+          </div>
+          <div class="project__body">
+            <h3 data-i18n="prj.1.t">Поставка технологической линии брикетирования рудного сырья</h3>
+            <p data-i18n="prj.1.task">Подобрать и поставить технологическую линию для подготовки вольфрам-молибденового сырья к кучному выщелачиванию.</p>
+            <span class="project__more"><span data-i18n="prj.more">Подробнее</span><i class="project__go"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></i></span>
+          </div>
         </article>
-        <article class="project project--red">
-          <span class="project__char">化</span>
-          <span class="project__num">02</span>
-          <span class="project__tag" data-i18n="prj.2.tag">Химия</span>
-          <h3 data-i18n="prj.2.t">Химические реагенты для производства</h3>
-          <p data-i18n="prj.2.d">Регулярные поставки реагентов с контролем качества и документов.</p>
+        <article class="project" data-project="1" role="button" tabindex="0" aria-label="Химические реагенты для предприятий">
+          <div class="project__media">
+            <img src="img/projects/p2.jpg" alt="" loading="lazy">
+            <span class="project__tag" data-i18n="prj.2.tag">Химия</span>
+          </div>
+          <div class="project__body">
+            <h3 data-i18n="prj.2.t">Химические реагенты для предприятий</h3>
+            <p data-i18n="prj.2.task">Подобрать и поставить ионообменные смолы для извлечения целевых компонентов из технологических растворов предприятия.</p>
+            <span class="project__more"><span data-i18n="prj.more">Подробнее</span><i class="project__go"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></i></span>
+          </div>
         </article>
-        <article class="project">
-          <span class="project__char">材</span>
-          <span class="project__num">03</span>
-          <span class="project__tag" data-i18n="prj.3.tag">Снабжение</span>
-          <h3 data-i18n="prj.3.t">Комплектация предприятия</h3>
-          <p data-i18n="prj.3.d">Сырьё, материалы и комплектующие по единому техническому заданию.</p>
+        <article class="project" data-project="2" role="button" tabindex="0" aria-label="Комплектация насосным оборудованием">
+          <div class="project__media">
+            <img src="img/projects/p3.jpg" alt="" loading="lazy">
+            <span class="project__tag" data-i18n="prj.3.tag">Насосы</span>
+          </div>
+          <div class="project__body">
+            <h3 data-i18n="prj.3.t">Комплектация насосным оборудованием</h3>
+            <p data-i18n="prj.3.task">Подобрать и поставить насосы для перекачивания и дозирования технологических сред.</p>
+            <span class="project__more"><span data-i18n="prj.more">Подробнее</span><i class="project__go"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></i></span>
+          </div>
         </article>
-        <article class="project project--gold">
-          <span class="project__char">船</span>
-          <span class="project__num">04</span>
-          <span class="project__tag" data-i18n="prj.4.tag">Логистика</span>
-          <h3 data-i18n="prj.4.t">Консолидация и доставка груза</h3>
-          <p data-i18n="prj.4.d">Сбор товаров от разных поставщиков на складе и отправка одной партией.</p>
+        <article class="project" data-project="3" role="button" tabindex="0" aria-label="Поставка лабораторного оборудования">
+          <div class="project__media">
+            <img src="img/projects/p4.jpg" alt="" loading="lazy">
+            <span class="project__tag" data-i18n="prj.4.tag">Лаборатория</span>
+          </div>
+          <div class="project__body">
+            <h3 data-i18n="prj.4.t">Поставка лабораторного оборудования</h3>
+            <p data-i18n="prj.4.task">Укомплектовать лабораторию оборудованием для проведения химических исследований и отработки технологических процессов.</p>
+            <span class="project__more"><span data-i18n="prj.more">Подробнее</span><i class="project__go"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></i></span>
+          </div>
+        </article>
+        <article class="project" data-project="4" role="button" tabindex="0" aria-label="Поставка оборудования">
+          <div class="project__media">
+            <img src="img/projects/p5.jpg" alt="" loading="lazy">
+            <span class="project__tag" data-i18n="prj.5.tag">Испытания</span>
+          </div>
+          <div class="project__body">
+            <h3 data-i18n="prj.5.t">Поставка оборудования</h3>
+            <p data-i18n="prj.5.task">Подобрать и поставить оборудование для определения механических характеристик минерального сырья и полиметаллических руд при статическом нагружении.</p>
+            <span class="project__more"><span data-i18n="prj.more">Подробнее</span><i class="project__go"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></i></span>
+          </div>
         </article>
         <article class="project project--cta">
           <h3 data-i18n="band.title">Расскажите о задаче — мы предложим решение</h3>
@@ -343,11 +357,25 @@
 
   <!-- ========== 04 Контакты ========== -->
   <!-- ЗАМЕНИТЬ: контактные данные ниже — заглушки. -->
+  <!-- ========== Партнёры: логотипы из папки public/партнеры (см. scripts/partners.js) ========== -->
+  <section class="section partners" id="partners" hidden>
+    <div class="container">
+      <div class="section__head partners__head">
+        <span class="section__label" data-i18n="partners.label">Партнёры</span>
+      </div>
+      <h2 class="h2 h2--center" data-split data-i18n="partners.title">Производители, с которыми мы работаем</h2>
+      <p class="partners__text" data-reveal data-i18n="partners.text">Мы сотрудничаем с производителями оборудования, материалов и химической продукции.</p>
+      <ul class="partners__grid" id="partners-grid"></ul>
+      <div class="partners__more">
+        <button class="btn btn--ghost" type="button" id="partners-more" hidden data-i18n="partners.showAll">Показать всех партнёров</button>
+      </div>
+    </div>
+  </section>
+
   <section class="section contacts" id="contacts">
     <svg class="cloud cloud--d" aria-hidden="true"><use href="#xiangyun"/></svg>
     <div class="container">
       <div class="section__head">
-        <span class="section__num"><i>四</i>04</span>
         <span class="section__label" data-i18n="contacts.label">Контакты</span>
       </div>
       <div class="contacts__grid">
@@ -368,7 +396,7 @@
         </div>
 
         <form class="card-form js-request-form" data-reveal novalidate>
-          <h3 class="h3" data-i18n="contacts.formTitle">Быстрая заявка</h3>
+          <h3 class="h3" data-i18n="contacts.formTitle">Запросить КП</h3>
           <input type="text" name="ctgj_trap" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
           <label class="field"><input type="text" name="name" required autocomplete="name" placeholder=" "><span data-i18n="form.name">Имя</span></label>
           <label class="field"><input type="text" name="phone" autocomplete="tel" placeholder=" "><span data-i18n="form.phone">Телефон / WhatsApp / WeChat</span></label>
@@ -397,6 +425,19 @@
   </div>
 </footer>
 
+<!-- ========== Страница проекта (открывается по клику на карточку, адрес #project-N) ========== -->
+<div class="pview" id="pview" role="dialog" aria-modal="true" aria-labelledby="pview-title" hidden data-lenis-prevent>
+  <div class="pview__bar">
+    <div class="container pview__bar-inner">
+      <button class="pview__back" type="button" data-pclose><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-i18n="prj.back">Все проекты</span></button>
+      <button class="pview__x" type="button" data-pclose aria-label="Закрыть" data-i18n-aria="prj.close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    </div>
+  </div>
+  <div class="pview__body" id="pview-body"></div>
+  <button class="arrow pview__nav pview__nav--prev" type="button" id="pview-prev" aria-label="Предыдущий проект" data-i18n-aria="prj.prevOne"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <button class="arrow pview__nav pview__nav--next" type="button" id="pview-next" aria-label="Следующий проект" data-i18n-aria="prj.nextOne"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+</div>
+
 <!-- ========== Кнопка «наверх» ========== -->
 <button class="to-top" id="to-top" type="button" aria-label="Наверх" data-i18n-aria="toTop">
   <svg class="to-top__ring" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><circle class="to-top__fill" id="to-top-fill" cx="26" cy="26" r="24"/></svg>
@@ -404,12 +445,12 @@
 </button>
 
 <!-- ========== Конверт сбоку ========== -->
-<button class="side-envelope" id="side-envelope" type="button" data-open-request aria-label="Оставить заявку">
+<button class="side-envelope" id="side-envelope" type="button" data-open-request aria-label="Получить коммерческое предложение" data-i18n-aria="cta.request">
   <span class="side-envelope__env">
     <span class="side-envelope__flap"></span>
     <span class="side-envelope__seal">福</span>
   </span>
-  <span class="side-envelope__label" data-i18n="envelope.label">Заявка</span>
+  <span class="side-envelope__label" data-i18n="envelope.label">Получить КП</span>
 </button>
 
 <!-- ========== Модальное окно-конверт с формой ========== -->
@@ -429,8 +470,8 @@
       <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     </button>
     <form class="js-request-form" novalidate>
-      <h2 class="letter__title" id="mail-title" data-i18n="form.title">Заявка</h2>
-      <p class="letter__sub" data-i18n="form.subtitle">Опишите задачу — менеджер свяжется с вами.</p>
+      <h2 class="letter__title" id="mail-title" data-i18n="form.title">Получить коммерческое предложение</h2>
+      <p class="letter__sub" data-i18n="form.subtitle">Опишите задачу — подготовим коммерческое предложение и свяжемся с вами.</p>
       <input type="text" name="ctgj_trap" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
       <div class="letter__row">
         <label class="field field--paper"><input type="text" name="name" required autocomplete="name" placeholder=" "><span data-i18n="form.name">Имя</span></label>
@@ -460,15 +501,15 @@
     </form>
     <div class="stamp" aria-hidden="true"><span data-i18n="stamp">已收到</span></div>
     <div class="letter__done" role="status">
-      <b data-i18n="form.successTitle">Заявка отправлена</b>
+      <b data-i18n="form.successTitle">Запрос отправлен</b>
       <span data-i18n="form.successText">Спасибо! Менеджер свяжется с вами в ближайшее время.</span>
     </div>
   </div>
 </div>
 
-<script src="js/i18n.js"></script>
-<script src="js/dragon.js"></script>
-<script src="js/ambient.js" defer></script>
-<script src="js/main.js" defer></script>
+<script src="js/i18n.js?v=20261013o"></script>
+<script src="js/dragon.js?v=20261013o"></script>
+<script src="js/ambient.js?v=20261013o" defer></script>
+<script src="js/main.js?v=20261013o" defer></script>
 </body>
 </html>

@@ -27,6 +27,7 @@ jobs:
 
       - name: Собрать сайт
         run: |
+          node scripts/partners.js
           cp -r public _site
           rm -rf _site/admin
           touch _site/.nojekyll

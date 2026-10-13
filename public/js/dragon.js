@@ -11,15 +11,16 @@
   const rand = (a, b) => a + Math.random() * (b - a);
 
   const GOLD = {
-    dark: '#8f5e17',
-    base: '#c48a2c',
-    mid: '#e2a945',
-    light: '#f7cf6b',
-    shine: '#fff1bf',
-    belly: '#f4dcA4',
-    line: 'rgba(110, 62, 8, 0.55)',
+    dark: '#9a6a22',
+    base: '#d29a3c',
+    mid: '#e9b656',
+    light: '#f8d983',
+    shine: '#fff5d2',
+    belly: '#f7e3ad',
+    line: 'rgba(120, 72, 14, 0.5)',
   };
-  const FIRE = { deep: '#c2361f', red: '#e2502b', orange: '#ff8a2a', yellow: '#ffc457' };
+  // грива, гребень, хвост и борода — кремово-золотые, как у дракона на видео
+  const FIRE = { deep: '#c08a32', red: '#e2b357', orange: '#f5d488', yellow: '#fff3cc' };
 
   /* Язычок пламени — используется для гривы, плавников, хвоста, бороды. */
   function flame(ctx, x, y, angle, len, width, phase, curl) {
@@ -146,8 +147,8 @@
 
       // спинной гребень: три слоя пламени — тёмный высокий, оранжевый, жёлтые кончики
       const crest = [
-        { color: FIRE.deep, step: 2, hMul: 1.35, wMul: 0.5, phase: 0 },
-        { color: FIRE.red, step: 2, hMul: 1.0, wMul: 0.4, phase: 1.3 },
+        { color: FIRE.deep, step: 2, hMul: 1.2, wMul: 0.68, phase: 0 },
+        { color: FIRE.red, step: 2, hMul: 0.92, wMul: 0.55, phase: 1.3 },
         { color: FIRE.orange, step: 3, hMul: 0.62, wMul: 0.3, phase: 2.1 },
       ];
       for (const L of crest) {
@@ -222,7 +223,26 @@
         }
       }
       ctx.strokeStyle = GOLD.line;
-      ctx.lineWidth = Math.max(0.8, s * 0.022);
+      ctx.lineWidth = Math.max(0.8, s * 0.026);
+      ctx.stroke();
+      // блик на каждой пластине — чешуя выглядит объёмной
+      ctx.beginPath();
+      for (let i = 2; i < n - 3; i += 2) {
+        const q = p[i];
+        const r = q.w * 0.09;
+        if (r < 1.2) continue;
+        const head = Math.atan2(q.ty, q.tx);
+        for (let row = 0; row < 4; row++) {
+          const off = -0.02 + row * 0.13 + 0.03;
+          const shift = (row % 2) * q.w * 0.09 - q.w * 0.02;
+          const cx = q.x + q.nx * q.w * off - q.tx * shift;
+          const cy = q.y + q.ny * q.w * off - q.ty * shift;
+          ctx.moveTo(cx + Math.cos(head + Math.PI * 0.75) * r, cy + Math.sin(head + Math.PI * 0.75) * r);
+          ctx.arc(cx, cy, r, head + Math.PI * 0.75, head + Math.PI * 1.25);
+        }
+      }
+      ctx.strokeStyle = 'rgba(255, 246, 210, 0.55)';
+      ctx.lineWidth = Math.max(0.6, s * 0.02);
       ctx.stroke();
 
       // контур тела
@@ -249,7 +269,7 @@
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       const s = this.size;
-      for (const [ph, amp] of [[0, 1.5], [Math.PI, 1.9]]) {
+      for (const [ph, amp] of [[0, 1.6], [Math.PI, 2.1], [Math.PI / 2, 2.6]]) {
         const pts = [];
         for (let i = 0; i < all.length; i++) {
           const q = all[i];
@@ -257,7 +277,7 @@
           const o = Math.sin(i * 0.11 - t * 2.2 + ph) * s * amp * (0.4 + (i / all.length) * 0.9);
           pts.push(q.x + nx * o, q.y + ny * o);
         }
-        for (const [w, a] of [[s * 0.35, 0.05], [s * 0.12, 0.14], [s * 0.035, 0.5]]) {
+        for (const [w, a] of [[s * 0.7, 0.05], [s * 0.3, 0.12], [s * 0.12, 0.28], [s * 0.04, 0.7]]) {
           // сегментами, чтобы лента затухала к концу
           const chunks = 6;
           const per = Math.ceil(pts.length / 2 / chunks);
@@ -388,16 +408,19 @@
       ctx.scale(1, this.side);
       ctx.translate(-s * 0.15, 0);
 
-      const jaw = 0.2 + Math.sin(t * 2.3) * 0.1;
+      const jaw = 0.32 + Math.sin(t * 2.3) * 0.08;
 
       // грива — за головой
       // пышная грива: четыре слоя, веер шире и длиннее
       const mane = [
-        { color: FIRE.deep, count: 15, y0: -0.75, y1: 0.6, a0: -1.3, a1: 0.75, len: 2.9, var: 0.55, w: 0.6, ph: 0 },
-        { color: FIRE.red, count: 12, y0: -0.65, y1: 0.5, a0: -1.1, a1: 0.6, len: 2.2, var: 0.4, w: 0.48, ph: 1 },
-        { color: FIRE.orange, count: 9, y0: -0.55, y1: 0.4, a0: -0.9, a1: 0.5, len: 1.55, var: 0.3, w: 0.36, ph: 2 },
-        { color: FIRE.yellow, count: 6, y0: -0.4, y1: 0.3, a0: -0.6, a1: 0.35, len: 0.95, var: 0.2, w: 0.22, ph: 3 },
+        { color: FIRE.deep, count: 15, y0: -0.75, y1: 0.6, a0: -1.3, a1: 0.75, len: 2.5, var: 0.45, w: 0.85, ph: 0 },
+        { color: FIRE.red, count: 12, y0: -0.65, y1: 0.5, a0: -1.1, a1: 0.6, len: 1.95, var: 0.35, w: 0.72, ph: 1 },
+        { color: FIRE.orange, count: 9, y0: -0.55, y1: 0.4, a0: -0.9, a1: 0.5, len: 1.4, var: 0.25, w: 0.56, ph: 2 },
+        { color: FIRE.yellow, count: 6, y0: -0.4, y1: 0.3, a0: -0.6, a1: 0.35, len: 0.95, var: 0.2, w: 0.38, ph: 3 },
       ];
+      ctx.save();
+      ctx.shadowColor = 'rgba(255, 220, 140, 0.55)';
+      ctx.shadowBlur = s * 0.5;
       for (const M of mane) {
         ctx.beginPath();
         for (let k = 0; k < M.count; k++) {
@@ -409,10 +432,16 @@
         ctx.fillStyle = M.color;
         ctx.fill();
       }
+      ctx.restore();
 
       // рога (дальний и ближний)
-      this.horn(ctx, s, s * 0.32, -s * 0.52, '#7a4f1c', t);
-      this.horn(ctx, s, s * 0.45, -s * 0.56, '#b07a3a', t + 0.4);
+      this.horn(ctx, s, s * 0.32, -s * 0.52, '#5e3d1c', t);
+      this.horn(ctx, s, s * 0.45, -s * 0.56, '#8a5a2b', t + 0.4);
+
+      // морда короче и выше, чем в исходном рисунке: сжимаем лицо по длине
+      const FX = 0.72, FY = 1.12;
+      ctx.save();
+      ctx.scale(FX, FY);
 
       // пасть изнутри
       ctx.save();
@@ -421,14 +450,14 @@
       ctx.lineTo(s * 1.85, s * 0.06);
       ctx.lineTo(s * 0.55 + Math.cos(jaw) * s * 1.2, s * 0.1 + Math.sin(jaw) * s * 1.2);
       ctx.closePath();
-      ctx.fillStyle = '#5c0d10';
+      ctx.fillStyle = '#b8505a';
       ctx.fill();
       // язык
       ctx.beginPath();
       ctx.moveTo(s * 0.7, s * 0.2);
       ctx.quadraticCurveTo(s * 1.3, s * (0.2 + jaw * 0.6), s * 1.55, s * (0.12 + jaw * 0.9));
-      ctx.strokeStyle = '#d43a4a';
-      ctx.lineWidth = s * 0.09;
+      ctx.strokeStyle = '#f2a0a0';
+      ctx.lineWidth = s * 0.11;
       ctx.lineCap = 'round';
       ctx.stroke();
       ctx.restore();
@@ -524,30 +553,69 @@
       ctx.fillStyle = '#fffaf0';
       ctx.fill();
 
+      // бирюзово-зелёный «воротник»: заострённые пластины веером назад от щеки
+      for (const layer of [
+        { n: 7, len: 0.62, w: 0.24, a0: 2.15, a1: 4.15, c0: '#2b7f6c', c1: '#174d42' },
+        { n: 6, len: 0.44, w: 0.2, a0: 2.3, a1: 4.0, c0: '#56b79c', c1: '#2b7f6c' },
+      ]) {
+        for (let k = 0; k < layer.n; k++) {
+          const ang = lerp(layer.a0, layer.a1, k / (layer.n - 1));
+          ctx.beginPath();
+          flame(ctx, s * 0.38, s * 0.02, ang, s * layer.len, s * layer.w, 0, 0);
+          const fg = ctx.createLinearGradient(s * 0.38, 0, s * 0.38 + Math.cos(ang) * s * layer.len, Math.sin(ang) * s * layer.len);
+          fg.addColorStop(0, layer.c0);
+          fg.addColorStop(1, layer.c1);
+          ctx.fillStyle = fg;
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(10, 40, 34, 0.5)';
+          ctx.lineWidth = s * 0.016;
+          ctx.stroke();
+        }
+      }
+
+      // ухо — розовое внутри, с золотой каймой
+      ctx.beginPath();
+      ctx.moveTo(s * 0.05, -s * 0.42);
+      ctx.quadraticCurveTo(-s * 0.32, -s * 0.78, -s * 0.5, -s * 0.62);
+      ctx.quadraticCurveTo(-s * 0.3, -s * 0.36, s * 0.05, -s * 0.3);
+      ctx.closePath();
+      ctx.fillStyle = GOLD.light;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(s * 0.0, -s * 0.4);
+      ctx.quadraticCurveTo(-s * 0.26, -s * 0.66, -s * 0.4, -s * 0.58);
+      ctx.quadraticCurveTo(-s * 0.24, -s * 0.4, s * 0.0, -s * 0.34);
+      ctx.closePath();
+      ctx.fillStyle = '#f0a5a0';
+      ctx.fill();
+
       // щека — спиральный завиток
       ctx.beginPath();
       ctx.arc(s * 0.38, s * 0.02, s * 0.2, 0.3, TAU * 0.85);
       ctx.arc(s * 0.42, -s * 0.0, s * 0.09, TAU * 0.85, 0.3 + TAU, false);
-      ctx.strokeStyle = 'rgba(150, 90, 20, 0.7)';
-      ctx.lineWidth = s * 0.04;
+      ctx.strokeStyle = 'rgba(150, 100, 30, 0.25)';
+      ctx.lineWidth = s * 0.03;
       ctx.stroke();
 
       // нос
       ctx.beginPath();
-      ctx.ellipse(s * 1.72, -s * 0.16, s * 0.14, s * 0.1, -0.3, 0, TAU);
+      ctx.ellipse(s * 1.7, -s * 0.14, s * 0.22, s * 0.15, -0.25, 0, TAU);
       ctx.fillStyle = GOLD.light;
       ctx.fill();
+      ctx.strokeStyle = 'rgba(120, 72, 14, 0.5)';
+      ctx.lineWidth = s * 0.025;
+      ctx.stroke();
       ctx.beginPath();
-      ctx.arc(s * 1.76, -s * 0.14, s * 0.045, 0, TAU);
+      ctx.ellipse(s * 1.78, -s * 0.1, s * 0.07, s * 0.045, -0.3, 0, TAU);
       ctx.fillStyle = '#4a2a08';
       ctx.fill();
 
       // надбровье
       ctx.beginPath();
-      ctx.moveTo(s * 0.45, -s * 0.48);
-      ctx.quadraticCurveTo(s * 0.85, -s * 0.66, s * 1.2, -s * 0.42);
-      ctx.strokeStyle = GOLD.dark;
-      ctx.lineWidth = s * 0.1;
+      ctx.moveTo(s * 0.5, -s * 0.5);
+      ctx.quadraticCurveTo(s * 0.85, -s * 0.64, s * 1.22, -s * 0.44);
+      ctx.strokeStyle = GOLD.base;
+      ctx.lineWidth = s * 0.17;
       ctx.lineCap = 'round';
       ctx.stroke();
       ctx.beginPath();
@@ -555,27 +623,43 @@
       ctx.fillStyle = FIRE.orange;
       ctx.fill();
 
-      // глаз
+      // глаз — крупный, светится бледно-жёлтым, как у дракона в примере
+      const ex = s * 0.9, ey = -s * 0.3;
       ctx.save();
-      ctx.shadowColor = 'rgba(255, 220, 120, 0.95)';
-      ctx.shadowBlur = s * 0.5;
+      ctx.shadowColor = 'rgba(255, 235, 150, 1)';
+      ctx.shadowBlur = s * 0.6;
       ctx.beginPath();
-      ctx.ellipse(s * 0.88, -s * 0.33, s * 0.17, s * 0.1, -0.15, 0, TAU);
-      const eg = ctx.createRadialGradient(s * 0.88, -s * 0.33, 0, s * 0.88, -s * 0.33, s * 0.17);
-      eg.addColorStop(0, '#fffbe0');
-      eg.addColorStop(0.5, '#ffd250');
-      eg.addColorStop(1, '#d26a00');
+      ctx.moveTo(ex - s * 0.3, ey + s * 0.03);
+      ctx.quadraticCurveTo(ex - s * 0.02, ey - s * 0.2, ex + s * 0.3, ey - s * 0.04);
+      ctx.quadraticCurveTo(ex + s * 0.02, ey + s * 0.17, ex - s * 0.3, ey + s * 0.03);
+      ctx.closePath();
+      const eg = ctx.createRadialGradient(ex + s * 0.03, ey - s * 0.02, 0, ex + s * 0.03, ey - s * 0.02, s * 0.3);
+      eg.addColorStop(0, '#fffef0');
+      eg.addColorStop(0.35, '#fff3a8');
+      eg.addColorStop(0.75, '#f5c64a');
+      eg.addColorStop(1, '#c8861c');
       ctx.fillStyle = eg;
       ctx.fill();
       ctx.restore();
+      // маленький тёмный центр
       ctx.beginPath();
-      ctx.ellipse(s * 0.92, -s * 0.33, s * 0.03, s * 0.08, -0.15, 0, TAU);
-      ctx.fillStyle = '#1c0d02';
+      ctx.ellipse(ex + s * 0.05, ey - s * 0.02, s * 0.04, s * 0.05, 0, 0, TAU);
+      ctx.fillStyle = 'rgba(60, 30, 5, 0.85)';
       ctx.fill();
+      // контур века
+      ctx.beginPath();
+      ctx.moveTo(ex - s * 0.31, ey + s * 0.04);
+      ctx.quadraticCurveTo(ex - s * 0.02, ey - s * 0.22, ex + s * 0.31, ey - s * 0.05);
+      ctx.strokeStyle = 'rgba(110, 60, 10, 0.8)';
+      ctx.lineWidth = s * 0.035;
+      ctx.lineCap = 'round';
+      ctx.stroke();
 
-      // усы
-      this.whisker(ctx, s, s * 1.6, -s * 0.05, t, 0);
-      this.whisker(ctx, s, s * 1.5, s * 0.02, t, 1.7);
+      ctx.restore(); // конец сжатой морды
+
+      // усы — от носа (с учётом сжатия морды)
+      this.whisker(ctx, s, s * 1.6 * FX, -s * 0.05 * FY, t, 0);
+      this.whisker(ctx, s, s * 1.5 * FX, s * 0.02 * FY, t, 1.7);
 
       ctx.restore();
     }
