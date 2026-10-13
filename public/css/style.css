@@ -1009,6 +1009,10 @@ body.is-ready [data-hero]:nth-child(5) { transition-delay: 0.4s; }
 .pview__photo { position: relative; margin: 0; min-height: 420px; background: var(--bg-3); }
 .pview__photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .pview__photo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(4, 6, 14, 0) 45%, rgba(4, 6, 14, 0.55) 100%); pointer-events: none; }
+/* рендер оборудования на белом фоне: вписываем целиком, над карточкой «Результат» */
+.pview__photo--contain { background: #fff; }
+.pview__photo--contain img { inset: 6% 5% 34%; width: 90%; height: 60%; object-fit: contain; }
+.pview__photo--contain::after { display: none; }
 .pview__credit { position: absolute; right: 16px; top: 14px; z-index: 2; font-size: 11px; color: rgba(255, 255, 255, 0.8); background: rgba(0, 0, 0, 0.35); padding: 3px 8px; border-radius: 6px; }
 .pview__credit a { color: inherit; text-decoration: underline; }
 /* карточка «Результат» поверх фото, заходит на правую панель */
@@ -1054,6 +1058,8 @@ body.pview-open .side-envelope, body.pview-open .to-top { opacity: 0; visibility
   .pview__photo { min-height: 0; background: transparent; }
   .pview__photo img { position: relative; display: block; height: min(66vw, 440px); }
   .pview__photo::after { display: none; }
+  .pview__photo--contain { background: #fff; padding: 16px 16px 48px; }
+  .pview__photo--contain img { inset: auto; width: 100%; height: auto; }
   .pview__result { position: relative; left: auto; right: auto; bottom: auto; margin: -40px 16px 0; }
   .pview__photo + .pview__info { padding-top: 40px; }
   .pview__info { padding: 40px var(--gutter) 110px; }

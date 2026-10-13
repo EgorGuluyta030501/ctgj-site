@@ -604,7 +604,7 @@
   const P_PHOTOS = [
     { src: 'img/projects/p1.jpg', credit: 'The EITI, CC BY-SA 2.0', link: 'https://commons.wikimedia.org/wiki/File:Taganito_Mining_Corp._nickel_ore_conveyor_belts_-_Flickr.jpg' },
     { src: 'img/projects/p2.jpg' },
-    { src: 'img/projects/p3.jpg' },
+    { src: 'img/projects/p3.jpg', fit: 'contain' }, // рендер насоса на белом фоне — не обрезать
     { src: 'img/projects/p4.jpg' },
     { src: 'img/projects/p5.jpg', credit: 'Vis M, CC BY-SA 4.0', link: 'https://commons.wikimedia.org/wiki/File:UTM_Autograph.jpg' },
   ];
@@ -625,7 +625,7 @@
           <p class="pview__lead">${e(k + '.task')}</p>
         </header>
         <section class="pview__split">
-          <figure class="pview__photo">
+          <figure class="pview__photo${photo.fit === 'contain' ? ' pview__photo--contain' : ''}">
             ${photo.src ? `<img src="${photo.src}" alt="${e(k + '.t')}">` : ''}
             ${credit}
             <div class="pview__result">
