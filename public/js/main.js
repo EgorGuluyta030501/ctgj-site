@@ -489,7 +489,7 @@
         return;
       }
       // та же проверка, что на сервере, — чтобы не отправлять заведомо отклонённую заявку
-      if (email && !/^[^s@]+@[^s@]+.[^s@]+$/.test(email)) return fail('form.badEmail', 'email');
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail('form.badEmail', 'email');
       if (!form.elements.consent.checked) return fail('form.consentRequired');
 
       const label = btn.querySelector('span') || btn;

@@ -204,7 +204,7 @@ route('POST', /^\/api\/requests$/, async (req, res) => {
     service: SERVICES.includes(b.service) ? b.service : 'other',
     message: str(b.message, 4000),
     lang: ['ru', 'en', 'zh'].includes(b.lang) ? b.lang : '',
-    source: str(b.source, 30),
+    source: ['envelope', 'contacts'].includes(b.source) ? b.source : '', // какая форма на сайте; другое не принимаем
   };
   if (!r.name || (!r.phone && !r.email)) return reject(400, 'required', 'Укажите имя и телефон или email');
   if (r.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.email)) return reject(400, 'email', 'Некорректный email');

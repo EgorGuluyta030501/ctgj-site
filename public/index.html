@@ -12,7 +12,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Manrope:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Unbounded:wght@400;500;700&display=swap">
   <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Manrope:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Unbounded:wght@400;500;700&display=swap" rel="stylesheet" media="print" id="gfonts">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Manrope:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Unbounded:wght@400;500;700&display=swap" rel="stylesheet"></noscript>
-  <link rel="stylesheet" href="css/style.css?v=20261014a">
+  <link rel="stylesheet" href="css/style.css?v=20261014b">
   <script>
     // тема применяется до отрисовки, чтобы не было вспышки тёмной темы
     try { if (localStorage.getItem('ctgj-theme') === 'light') document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {}
@@ -406,10 +406,10 @@
         <form class="card-form js-request-form" data-reveal novalidate>
           <h3 class="h3" data-i18n="contacts.formTitle">Запросить КП</h3>
           <input type="text" name="ctgj_trap" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-          <label class="field"><input type="text" name="name" required autocomplete="name" placeholder=" "><span data-i18n="form.name">Имя</span></label>
-          <label class="field"><input type="text" name="phone" autocomplete="tel" placeholder=" "><span data-i18n="form.phone">Телефон / WhatsApp / WeChat</span></label>
-          <label class="field"><input type="email" name="email" autocomplete="email" placeholder=" "><span data-i18n="form.email">Email</span></label>
-          <label class="field"><textarea name="message" rows="3" placeholder=" "></textarea><span data-i18n="form.message">Сообщение</span></label>
+          <label class="field"><input type="text" name="name" maxlength="120" required autocomplete="name" placeholder=" "><span data-i18n="form.name">Имя</span></label>
+          <label class="field"><input type="text" name="phone" maxlength="60" autocomplete="tel" placeholder=" "><span data-i18n="form.phone">Телефон / WhatsApp / WeChat</span></label>
+          <label class="field"><input type="email" name="email" maxlength="120" autocomplete="email" placeholder=" "><span data-i18n="form.email">Email</span></label>
+          <label class="field"><textarea name="message" maxlength="4000" rows="3" placeholder=" "></textarea><span data-i18n="form.message">Сообщение</span></label>
           <label class="check"><input type="checkbox" name="consent" required checked><span data-i18n="form.consent">Я согласен(на) на обработку персональных данных</span></label>
           <p class="form-msg" role="status"></p>
           <button class="btn btn--red btn--block" type="submit" data-i18n="form.submit">Отправить</button>
@@ -482,12 +482,12 @@
       <p class="letter__sub" data-i18n="form.subtitle">Опишите задачу — подготовим коммерческое предложение и свяжемся с вами.</p>
       <input type="text" name="ctgj_trap" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
       <div class="letter__row">
-        <label class="field field--paper"><input type="text" name="name" required autocomplete="name" placeholder=" "><span data-i18n="form.name">Имя</span></label>
-        <label class="field field--paper"><input type="text" name="company" autocomplete="organization" placeholder=" "><span data-i18n="form.company">Компания</span></label>
+        <label class="field field--paper"><input type="text" name="name" maxlength="120" required autocomplete="name" placeholder=" "><span data-i18n="form.name">Имя</span></label>
+        <label class="field field--paper"><input type="text" name="company" maxlength="160" autocomplete="organization" placeholder=" "><span data-i18n="form.company">Компания</span></label>
       </div>
       <div class="letter__row">
-        <label class="field field--paper"><input type="text" name="phone" autocomplete="tel" placeholder=" "><span data-i18n="form.phone">Телефон / WhatsApp / WeChat</span></label>
-        <label class="field field--paper"><input type="email" name="email" autocomplete="email" placeholder=" "><span data-i18n="form.email">Email</span></label>
+        <label class="field field--paper"><input type="text" name="phone" maxlength="60" autocomplete="tel" placeholder=" "><span data-i18n="form.phone">Телефон / WhatsApp / WeChat</span></label>
+        <label class="field field--paper"><input type="email" name="email" maxlength="120" autocomplete="email" placeholder=" "><span data-i18n="form.email">Email</span></label>
       </div>
       <label class="field field--paper field--select">
         <select name="service">
@@ -499,7 +499,7 @@
         </select>
         <span data-i18n="form.service">Услуга</span>
       </label>
-      <label class="field field--paper"><textarea name="message" rows="3" placeholder=" "></textarea><span data-i18n="form.message">Сообщение</span></label>
+      <label class="field field--paper"><textarea name="message" maxlength="4000" rows="3" placeholder=" "></textarea><span data-i18n="form.message">Сообщение</span></label>
       <label class="check check--paper"><input type="checkbox" name="consent" required checked><span data-i18n="form.consent">Я согласен(на) на обработку персональных данных</span></label>
       <p class="form-msg" role="status"></p>
       <button class="btn btn--red btn--block" type="submit">
@@ -515,9 +515,9 @@
   </div>
 </div>
 
-<script src="js/i18n.js?v=20261014a"></script>
-<script src="js/dragon.js?v=20261014a"></script>
-<script src="js/ambient.js?v=20261014a" defer></script>
-<script src="js/main.js?v=20261014a" defer></script>
+<script src="js/i18n.js?v=20261014b"></script>
+<script src="js/dragon.js?v=20261014b"></script>
+<script src="js/ambient.js?v=20261014b" defer></script>
+<script src="js/main.js?v=20261014b" defer></script>
 </body>
 </html>
