@@ -600,13 +600,13 @@
   let pushedProject = false;
   let projectReturnFocus = null;
 
-  // фото проектов (img/projects); для CC BY-SA обязательна подпись автора
+  // фото проектов (img/projects); если фото под CC BY — добавить credit и link, подпись выведется на фото
   const P_PHOTOS = [
-    { src: 'img/projects/p1.jpg', credit: 'The EITI, CC BY-SA 2.0', link: 'https://commons.wikimedia.org/wiki/File:Taganito_Mining_Corp._nickel_ore_conveyor_belts_-_Flickr.jpg' },
+    { src: 'img/projects/p1.jpg' },
     { src: 'img/projects/p2.jpg' },
     { src: 'img/projects/p3.jpg', fit: 'contain' }, // рендер насоса на белом фоне — не обрезать
     { src: 'img/projects/p4.jpg' },
-    { src: 'img/projects/p5.jpg', credit: 'Vis M, CC BY-SA 4.0', link: 'https://commons.wikimedia.org/wiki/File:UTM_Autograph.jpg' },
+    { src: 'img/projects/p5.jpg' },
   ];
 
   function projectHtml(i) {
