@@ -208,6 +208,9 @@
   if (!reduced) {
     const s = document.createElement('script');
     s.src = 'https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js';
+    // проверка целостности: если файл на CDN подменят, браузер его не выполнит
+    s.integrity = 'sha384-eD5ubmuCcvTdCADWuSchJYE7wcj2nzNr0itbrh6w/KJyBiltSZ8w3VFRBSWu5YQ8';
+    s.crossOrigin = 'anonymous';
     s.async = true;
     s.onload = initLenis;
     document.head.appendChild(s);

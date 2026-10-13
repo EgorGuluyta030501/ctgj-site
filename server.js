@@ -41,6 +41,11 @@ function checkPassword(pw, stored) {
   const b = crypto.scryptSync(pw, salt, 64);
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
+// для несуществующего логина всё равно считаем scrypt: по времени ответа нельзя понять, есть ли такой пользователь
+const DUMMY_HASH = hashPassword(crypto.randomBytes(16).toString('hex'));
+
+// в базе храним не сам токен сессии, а его хэш: утечка базы не даёт войти чужой сессией
+const tokenHash = (token) => crypto.createHash('sha256').update(token).digest('hex');
 
 // первый администратор
 async function ensureAdmin() {
@@ -57,16 +62,19 @@ async function ensureAdmin() {
 
 async function createSession(userId) {
   const token = crypto.randomBytes(32).toString('hex');
-  await db.run('INSERT INTO sessions (token, user_id, expires_at) VALUES ($1, $2, $3)', [token, userId, new Date(Date.now() + SESSION_TTL)]);
+  await db.run('INSERT INTO sessions (token, user_id, expires_at) VALUES ($1, $2, $3)', [tokenHash(token), userId, new Date(Date.now() + SESSION_TTL)]);
   return token;
 }
 async function getUser(req) {
   const token = parseCookies(req).sid;
-  if (!token) return null;
-  return db.one(`
+  if (!token || !/^[0-9a-f]{64}$/.test(token)) return null;
+  const user = await db.one(`
     SELECT u.id, u.name, u.login, u.role FROM sessions s
     JOIN users u ON u.id = s.user_id
-    WHERE s.token = $1 AND s.expires_at > now() AND u.active`, [token]);
+    WHERE s.token = $1 AND s.expires_at > now() AND u.active`, [tokenHash(token)]);
+  // хэш текущей сессии — неперечисляемое поле, в ответ /api/me не попадает
+  if (user) Object.defineProperty(user, 'sid', { value: tokenHash(token) });
+  return user;
 }
 
 /* ================= Утилиты HTTP ================= */
@@ -74,7 +82,10 @@ function parseCookies(req) {
   const out = {};
   (req.headers.cookie || '').split(';').forEach((p) => {
     const i = p.indexOf('=');
-    if (i > 0) out[p.slice(0, i).trim()] = decodeURIComponent(p.slice(i + 1).trim());
+    if (i <= 0) return;
+    let v = p.slice(i + 1).trim();
+    try { v = decodeURIComponent(v); } catch (e) { /* битая cookie — берём как есть */ }
+    out[p.slice(0, i).trim()] = v;
   });
   return out;
 }
@@ -217,7 +228,8 @@ route('POST', /^\/api\/login$/, async (req, res) => {
   if (overLimit('login:' + ip, LOGIN_LIMIT, TEN_MIN)) return send(res, 429, { error: 'Слишком много попыток, подождите 10 минут' });
   const b = await readJson(req);
   const u = await db.one('SELECT * FROM users WHERE lower(login) = lower($1)', [str(b.login, 60)]);
-  if (!u || !u.active || !checkPassword(String(b.password || ''), u.pass)) {
+  const passOk = checkPassword(String(b.password || '').slice(0, 200), u ? u.pass : DUMMY_HASH);
+  if (!u || !u.active || !passOk) {
     hit('login:' + ip);
     return send(res, 401, { error: 'Неверный логин или пароль' });
   }
@@ -228,7 +240,7 @@ route('POST', /^\/api\/login$/, async (req, res) => {
 
 route('POST', /^\/api\/logout$/, async (req, res) => {
   const token = parseCookies(req).sid;
-  if (token) await db.run('DELETE FROM sessions WHERE token = $1', [token]);
+  if (token) await db.run('DELETE FROM sessions WHERE token = $1', [tokenHash(token)]);
   send(res, 200, { ok: true }, { 'Set-Cookie': 'sid=; HttpOnly; Path=/; SameSite=Strict; Max-Age=0' });
 });
 
@@ -372,7 +384,7 @@ route('POST', /^\/api\/admin\/users$/, async (req, res) => {
   const name = str(b.name, 80), login = str(b.login, 40), pw = String(b.password || '');
   const role = b.role === 'admin' ? 'admin' : 'manager';
   if (!name || !/^[a-zA-Z0-9._-]{3,40}$/.test(login)) return send(res, 400, { error: 'Укажите имя и логин (латиница, цифры, . _ -, от 3 символов)' });
-  if (pw.length < 8) return send(res, 400, { error: 'Пароль — минимум 8 символов' });
+  if (pw.length < 8 || pw.length > 200) return send(res, 400, { error: 'Пароль — от 8 до 200 символов' });
   try {
     const row = await db.one('INSERT INTO users (name, login, pass, role, contact) VALUES ($1, $2, $3, $4, $5) RETURNING id',
       [name, login, hashPassword(pw), role, str(b.contact, 120)]);
@@ -387,7 +399,7 @@ route('PATCH', /^\/api\/admin\/users\/(\d+)$/, async (req, res, user, m) => {
   const id = Number(m[1]);
   const b = await readJson(req);
   if (id === user.id && (b.active === false || b.role === 'manager')) return send(res, 400, { error: 'Нельзя отключить или понизить самого себя' });
-  if (b.password && String(b.password).length < 8) return send(res, 400, { error: 'Пароль — минимум 8 символов' });
+  if (b.password && (String(b.password).length < 8 || String(b.password).length > 200)) return send(res, 400, { error: 'Пароль — от 8 до 200 символов' });
   const found = await db.tx(async (t) => {
     const u = await t.one('SELECT id FROM users WHERE id = $1 FOR UPDATE', [id]);
     if (!u) return false;
@@ -412,8 +424,13 @@ route('POST', /^\/api\/admin\/password$/, async (req, res, user) => {
   const b = await readJson(req);
   const u = await db.one('SELECT pass FROM users WHERE id = $1', [user.id]);
   if (!checkPassword(String(b.old || ''), u.pass)) return send(res, 400, { error: 'Текущий пароль неверен' });
-  if (String(b.password || '').length < 8) return send(res, 400, { error: 'Новый пароль — минимум 8 символов' });
-  await db.run('UPDATE users SET pass = $1 WHERE id = $2', [hashPassword(String(b.password)), user.id]);
+  const np = String(b.password || '');
+  if (np.length < 8 || np.length > 200) return send(res, 400, { error: 'Новый пароль — от 8 до 200 символов' });
+  await db.tx(async (t) => {
+    await t.run('UPDATE users SET pass = $1 WHERE id = $2', [hashPassword(String(b.password)), user.id]);
+    // после смены пароля выходим на всех остальных устройствах (если пароль украли — сессия злоумышленника закроется)
+    await t.run('DELETE FROM sessions WHERE user_id = $1 AND token <> $2', [user.id, user.sid]);
+  });
   send(res, 200, { ok: true });
 }, 'any');
 
@@ -424,7 +441,11 @@ const MIME = {
   '.webp': 'image/webp', '.ico': 'image/x-icon', '.mp4': 'video/mp4', '.woff2': 'font/woff2', '.txt': 'text/plain; charset=utf-8',
 };
 function serveStatic(req, res, pathname) {
-  let rel = decodeURIComponent(pathname);
+  let rel;
+  try { rel = decodeURIComponent(pathname); } catch (e) { return send(res, 400, 'Bad request'); }
+  if (rel.includes('\0')) return send(res, 400, 'Bad request');
+  // скрытые файлы (.gitkeep и т. п.) не отдаём
+  if (/(^|[\\/])\./.test(rel)) return send(res, 404, 'Not found');
   if (rel === '/admin') { res.writeHead(301, { Location: '/admin/' }); return res.end(); }
   // список логотипов партнёров собирается из папки на лету — новые файлы видны сразу
   if (rel === '/партнеры/partners.json') return send(res, 200, buildPartners());
@@ -445,13 +466,17 @@ function serveStatic(req, res, pathname) {
       'Last-Modified': lastModified,
       'Cache-Control': revalidate ? 'no-cache' : 'public, max-age=3600',
     };
+    // заголовки безопасности страницы — и в полном ответе, и в 304 (иначе браузер оставит старые из кеша)
+    const secure = {};
+    if (rel.startsWith('/admin/')) { secure['X-Frame-Options'] = 'DENY'; secure['X-Robots-Tag'] = 'noindex'; }
+    if (ext === '.html') secure['Content-Security-Policy'] = cspFor(file, rel.startsWith('/admin/'));
+    Object.assign(headers, secure);
     // файл не менялся с прошлого раза — отвечаем 304 без тела
     const since = Date.parse(req.headers['if-modified-since'] || '');
     if (since && Math.floor(st.mtimeMs / 1000) * 1000 <= since && !req.headers.range) {
-      res.writeHead(304, { 'Last-Modified': lastModified, 'Cache-Control': headers['Cache-Control'] });
+      res.writeHead(304, { 'Last-Modified': lastModified, 'Cache-Control': headers['Cache-Control'], ...secure });
       return res.end();
     }
-    if (rel.startsWith('/admin/')) { headers['X-Frame-Options'] = 'DENY'; headers['X-Robots-Tag'] = 'noindex'; }
 
     // отдача файла частями (Range) — без неё Safari не воспроизводит видео
     const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || '');
@@ -477,11 +502,50 @@ function serveStatic(req, res, pathname) {
   });
 }
 
+/* ================= Заголовки безопасности ================= */
+// Content-Security-Policy: браузер выполняет только наши скрипты (+ Lenis с jsDelivr) и шрифты Google,
+// поэтому даже если в страницу каким-то образом попадёт чужой HTML, внедрённый скрипт не запустится.
+// Встроенные <script> в HTML разрешаются по хэшу — он считается из файла, правки подхватываются сами.
+const cspCache = new Map();
+function cspFor(file, isAdmin) {
+  let mtime = 0;
+  try { mtime = fs.statSync(file).mtimeMs; } catch (e) { /* нет файла — хэшей не будет */ }
+  const cached = cspCache.get(file);
+  if (cached && cached.mtime === mtime) return cached.csp;
+  let hashes = [];
+  try {
+    const html = fs.readFileSync(file, 'utf8');
+    hashes = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)]
+      // браузер хэширует текст скрипта после разбора HTML, где переводы строк CRLF уже заменены на LF
+      .map((m) => `'sha256-${crypto.createHash('sha256').update(m[1].replace(/\r\n?/g, '\n')).digest('base64')}'`);
+  } catch (e) { /* пусто */ }
+  const csp = [
+    "default-src 'self'",
+    `script-src 'self' ${hashes.join(' ')} https://cdn.jsdelivr.net`.replace(/\s+/g, ' '),
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    "img-src 'self' data: blob:",
+    "media-src 'self'",
+    "connect-src 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    `frame-ancestors ${isAdmin ? "'none'" : "'self'"}`,
+  ].join('; ');
+  cspCache.set(file, { mtime, csp });
+  return csp;
+}
+
 /* ================= Сервер ================= */
 const server = http.createServer(async (req, res) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  const url = new URL(req.url, 'http://localhost');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN'); // сайт нельзя встроить в чужую страницу (кликджекинг)
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  if (isHttps(req)) res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  let url;
+  try { url = new URL(req.url, 'http://localhost'); } catch (e) { return send(res, 400, 'Bad request'); }
   try {
     if (url.pathname.startsWith('/api/')) {
       for (const r of routes) {
@@ -505,6 +569,10 @@ const server = http.createServer(async (req, res) => {
     if (!e.status) console.error(e);
   }
 });
+
+// медленные клиенты (атака Slowloris) не держат соединения бесконечно
+server.headersTimeout = 20 * 1000;
+server.requestTimeout = 60 * 1000;
 
 /* ================= Запуск ================= */
 async function main() {
