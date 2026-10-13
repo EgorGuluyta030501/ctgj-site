@@ -949,6 +949,29 @@ body.is-ready [data-hero]:nth-child(5) { transition-delay: 0.4s; }
 .partner:hover::before { opacity: 1; }
 .partner:hover img { transform: scale(1.07); filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.12)); }
 .partner.is-hidden { display: none; }
+/* логотип со своей страницей: курсор-ссылка и стрелка в углу */
+.partner.is-link { cursor: pointer; }
+.partner.is-link:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.partner__go {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: var(--red);
+  opacity: 0;
+  transform: translate(-6px, 0) scale(0.8);
+  transition: opacity 0.35s var(--ease), transform 0.45s var(--ease);
+}
+.partner__go svg { width: 14px; height: 14px; }
+.partner.is-link:hover .partner__go,
+.partner.is-link:focus-visible .partner__go { opacity: 1; transform: none; }
+/* на телефоне наведения нет — стрелка видна всегда, но приглушённо */
+@media (hover: none) { .partner__go { opacity: 0.85; transform: none; width: 22px; height: 22px; right: 7px; bottom: 7px; } }
 .partners__more { display: flex; justify-content: center; margin-top: 32px; }
 @media (max-width: 1100px) { .partners__grid { --cols: 3; } }
 @media (max-width: 600px) {
@@ -1013,6 +1036,10 @@ body.is-ready [data-hero]:nth-child(5) { transition-delay: 0.4s; }
 .pview__photo--contain { background: #fff; }
 .pview__photo--contain img { inset: 6% 5% 34%; width: 90%; height: 60%; object-fit: contain; }
 .pview__photo--contain::after { display: none; }
+/* широкое фото в высокой панели: целиком, поверх размытой копии самого себя */
+.pview__photo--blur { overflow: hidden; }
+.pview__photo--blur::before { content: ''; position: absolute; inset: -40px; background: var(--img) center / cover no-repeat; filter: blur(28px) brightness(0.55) saturate(1.15); }
+.pview__photo--blur img { inset: 5% 4% 32%; width: 92%; height: 63%; object-fit: contain; filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.45)); }
 .pview__credit { position: absolute; right: 16px; top: 14px; z-index: 2; font-size: 11px; color: rgba(255, 255, 255, 0.8); background: rgba(0, 0, 0, 0.35); padding: 3px 8px; border-radius: 6px; }
 .pview__credit a { color: inherit; text-decoration: underline; }
 /* карточка «Результат» поверх фото, заходит на правую панель */
@@ -1043,6 +1070,19 @@ body.is-ready [data-hero]:nth-child(5) { transition-delay: 0.4s; }
 .pview__cols p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--muted); }
 .pview__info .btn { align-self: flex-start; }
 
+/* страница партнёра: логотип, описание, цифры, направления */
+.pview__chip--logo { background: #fff; padding: 14px 26px; }
+.pview__chip--logo img { display: block; height: 52px; width: auto; max-width: 240px; object-fit: contain; }
+.pview__about { margin: 0 0 clamp(24px, 2.6vw, 36px); font-size: 16px; line-height: 1.65; color: rgba(var(--ink-rgb), 0.85); }
+.pview__facts { list-style: none; margin: 0 0 clamp(26px, 3vw, 40px); padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; }
+.pview__facts li { padding: 16px 18px; border-radius: 14px; background: var(--bg-3); border-left: 3px solid var(--gold); }
+.pview__facts b { display: block; font-family: var(--f-head); font-weight: 500; font-size: clamp(16px, 1.3vw, 20px); line-height: 1.15; color: var(--ink); margin-bottom: 6px; }
+.pview__facts span { display: block; font-size: 13px; line-height: 1.4; color: var(--muted); }
+.pview__sub { display: flex; align-items: center; gap: 10px; font-family: var(--f-head); font-weight: 500; font-size: clamp(18px, 1.6vw, 24px); margin: 0 0 14px; }
+.pview__sub i { width: 8px; height: 8px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+.pview__tags { list-style: none; margin: 0 0 clamp(30px, 3.5vw, 44px); padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.pview__tags li { padding: 8px 14px; border-radius: 100px; border: 1px solid var(--line); font-size: 14px; line-height: 1.3; }
+
 .pview__nav { position: fixed; top: 50%; z-index: 4; width: 58px; height: 58px; margin-top: -29px; background: var(--float-bg); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
 .pview__nav--prev { left: 14px; }
 .pview__nav--next { right: 14px; }
@@ -1060,6 +1100,8 @@ body.pview-open .side-envelope, body.pview-open .to-top { opacity: 0; visibility
   .pview__photo::after { display: none; }
   .pview__photo--contain { background: #fff; padding: 16px 16px 48px; }
   .pview__photo--contain img { inset: auto; width: 100%; height: auto; }
+  .pview__photo--blur::before { display: none; }
+  .pview__photo--blur img { inset: auto; width: 100%; height: auto; filter: none; }
   .pview__result { position: relative; left: auto; right: auto; bottom: auto; margin: -40px 16px 0; }
   .pview__photo + .pview__info { padding-top: 40px; }
   .pview__info { padding: 40px var(--gutter) 110px; }

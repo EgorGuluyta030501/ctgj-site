@@ -398,7 +398,7 @@
   const later = (fn, ms) => timers.push(setTimeout(fn, ms));
   const clearTimers = () => { while (timers.length) clearTimeout(timers.pop()); };
 
-  function openMail(service) {
+  function openMail(service, message) {
     clearTimers();
     lastFocus = document.activeElement;
     const form = $('form', letter);
@@ -406,6 +406,7 @@
     form.reset();
     $('.form-msg', form).textContent = '';
     if (service) form.elements.service.value = service;
+    if (message) form.elements.message.value = message;
     mail.hidden = false;
     mail.className = 'mail';
     document.body.classList.add('mail-open');
@@ -538,8 +539,24 @@
   });
 
   /* ================= Партнёры ================= */
+  // Страницы партнёров (#partner-id). id = имя файла логотипа без номера: «02-shitian.png» → shitian.
+  // Тексты — в i18n.js (ключи ptn.<id>.*). Контакты производителей намеренно не показываем: все запросы идут через CTGJ.
+  // Логотип без записи здесь просто выводится в сетке, без перехода на страницу.
+  const P_INFO = [
+    { id: 'fulaier', name: 'Fulaier', photo: 'img/partners/fulaier.jpg' },
+    // fit: 'contain' — предмет на белом фоне; 'blur' — широкое фото целиком на размытом фоне; без fit — фото на всю панель
+    { id: 'shitian', name: 'Shitian', photo: 'img/partners/shitian.jpg', fit: 'blur' },
+    { id: 'dbd-power', name: 'DBD Power', photo: 'img/partners/dbd-power.jpg' },
+    { id: 'huxi', name: 'HUXI', photo: 'img/partners/huxi.jpg', fit: 'blur' },
+    { id: 'shanghai-sunshine-pump', name: 'Shanghai Sunshine Pump', photo: 'img/partners/shanghai-sunshine-pump.jpg', fit: 'contain' },
+    { id: 'innofluid', name: 'Innofluid', photo: 'img/partners/innofluid.jpg', fit: 'contain' },
+    { id: 'yisite', name: 'Yisite', photo: 'img/partners/yisite.jpg', fit: 'blur' },
+  ];
+  const partnerLogos = {}; // id → файл логотипа из partners.json
+  const partnerId = (file) => file.replace(/\.[^.]+$/, '').replace(/^\d+[\s._-]*/, '').toLowerCase();
+
   // логотипы — из public/партнеры, список отдаёт partners.json (сервер или сборка GitHub Pages)
-  (async function loadPartners() {
+  const partnersReady = (async function loadPartners() {
     const section = $('#partners');
     const grid = $('#partners-grid');
     const moreBtn = $('#partners-more');
@@ -552,11 +569,30 @@
     if (!Array.isArray(list) || !list.length) return;
 
     const LIMIT = 15; // сколько показываем сразу; остальные — по кнопке
-    grid.innerHTML = list.map((p, i) => `
-      <li class="partner${i >= LIMIT ? ' is-hidden' : ''}" data-reveal style="--i:${i % 10}">
+    grid.innerHTML = list.map((p, i) => {
+      const id = partnerId(p.file);
+      partnerLogos[id] = p.file;
+      const idx = P_INFO.findIndex((x) => x.id === id);
+      const link = idx >= 0
+        ? ` is-link" role="button" tabindex="0" data-partner="${idx}" aria-label="${escapeHtml(P_INFO[idx].name)}`
+        : '';
+      return `
+      <li class="partner${i >= LIMIT ? ' is-hidden' : ''}${link}" data-reveal style="--i:${i % 10}">
         <img src="партнеры/${encodeURIComponent(p.file)}" alt="${escapeHtml(p.name)}" title="${escapeHtml(p.name)}" loading="lazy">
-      </li>`).join('');
+        ${idx >= 0 ? '<i class="partner__go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></i>' : ''}
+      </li>`;
+    }).join('');
     section.hidden = false;
+
+    // клик по логотипу — страница партнёра
+    const openTile = (e) => {
+      const tile = e.target.closest('.partner[data-partner]');
+      if (tile) openView('partner', Number(tile.dataset.partner));
+    };
+    grid.addEventListener('click', openTile);
+    grid.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTile(e); }
+    });
 
     // световое пятно следует за курсором
     grid.addEventListener('pointermove', (e) => {
@@ -590,8 +626,9 @@
     }
   })();
 
-  /* ================= Страница проекта ================= */
-  // Открывается по клику на карточку; адрес #project-N, работает кнопка «Назад» браузера.
+  /* ================= Страница проекта / партнёра ================= */
+  // Открывается по клику на карточку проекта (#project-N) или логотип партнёра (#partner-id);
+  // работает кнопка «Назад» браузера.
   const pview = $('#pview');
   const pviewBody = $('#pview-body');
   const projectCards = $$('.project[data-project]');
@@ -647,11 +684,95 @@
       </article>`;
   }
 
+  function partnerHtml(i) {
+    const p = P_INFO[i];
+    const k = `ptn.${p.id}`;
+    const e = (key) => escapeHtml(t(key));
+    const items = (key) => t(key).split('|').map((s) => s.trim()).filter(Boolean);
+    const logo = partnerLogos[p.id];
+    const legal = t(k + '.legal');
+    const facts = items(k + '.facts').map((f) => {
+      const [value, label] = f.split('::').map((s) => s.trim());
+      return `<li><b>${escapeHtml(value)}</b><span>${escapeHtml(label || '')}</span></li>`;
+    }).join('');
+    return `
+      <article class="pview__page pview__page--partner">
+        <header class="container pview__head">
+          <span class="pview__tag">${e(k + '.tag')}</span>
+          <h2 class="h2 pview__title" id="pview-title">${escapeHtml(p.name)}</h2>
+          ${legal ? `<span class="pview__label">${escapeHtml(legal)}</span>` : ''}
+          <p class="pview__lead">${e(k + '.lead')}</p>
+        </header>
+        <section class="pview__split">
+          <figure class="pview__photo${p.fit ? ` pview__photo--${p.fit}` : ''}"${p.fit === 'blur' ? ` style="--img:url('${p.photo}')"` : ''}>
+            <img src="${p.photo}" alt="${escapeHtml(p.name)}">
+            <div class="pview__result">
+              <h3>${e('ptn.via')}</h3>
+              <p>${e('ptn.viaText')}</p>
+            </div>
+          </figure>
+          <div class="pview__info">
+            ${logo
+              ? `<span class="pview__chip pview__chip--logo"><img src="партнеры/${encodeURIComponent(logo)}" alt="${escapeHtml(p.name)}"></span>`
+              : `<span class="pview__chip">${escapeHtml(p.name)}</span>`}
+            <h3 class="pview__ctx">${e('ptn.about')}</h3>
+            <p class="pview__about">${e(k + '.about')}</p>
+            ${facts ? `<ul class="pview__facts">${facts}</ul>` : ''}
+            <h4 class="pview__sub"><i></i>${e('ptn.products')}</h4>
+            <ul class="pview__tags">${items(k + '.products').map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ul>
+            <button class="btn btn--red" type="button" data-pview-request>${e('ptn.cta')}</button>
+          </div>
+        </section>
+      </article>`;
+  }
+
+  // два вида страниц в одном окне: проекты и партнёры
+  const VIEWS = {
+    project: {
+      count: () => PROJECT_COUNT,
+      html: projectHtml,
+      hash: (i) => `#project-${i + 1}`,
+      parse: (h) => {
+        const m = /^#project-(\d+)$/.exec(h);
+        return m && Number(m[1]) >= 1 && Number(m[1]) <= PROJECT_COUNT ? Number(m[1]) - 1 : -1;
+      },
+      labels: { back: 'prj.back', prev: 'prj.prevOne', next: 'prj.nextOne' },
+      request: () => openMail('supply'),
+    },
+    partner: {
+      count: () => P_INFO.length,
+      html: partnerHtml,
+      hash: (i) => `#partner-${P_INFO[i].id}`,
+      parse: (h) => {
+        const m = /^#partner-([\w-]+)$/.exec(h);
+        return m ? P_INFO.findIndex((p) => p.id === m[1]) : -1;
+      },
+      labels: { back: 'ptn.back', prev: 'ptn.prevOne', next: 'ptn.nextOne' },
+      // в заявку подставляем производителя — менеджер сразу видит, о чём запрос
+      request: (i) => openMail('supply', t('ptn.request').replace('{name}', P_INFO[i].name)),
+    },
+  };
+  let viewKind = null;
+
+  // подписи «Все проекты / Все партнёры» и стрелок зависят от вида страницы
+  function setViewLabels(kind) {
+    const L = VIEWS[kind].labels;
+    const back = $('.pview__back span', pview);
+    back.dataset.i18n = L.back;
+    back.textContent = t(L.back);
+    [['#pview-prev', L.prev], ['#pview-next', L.next]].forEach(([sel, key]) => {
+      const b = $(sel, pview);
+      b.dataset.i18nAria = key;
+      b.setAttribute('aria-label', t(key));
+    });
+  }
+
   function renderProject(i, dir) {
+    const V = VIEWS[viewKind];
     const old = $('.pview__page', pviewBody);
     const place = () => {
-      pviewBody.innerHTML = projectHtml(i);
-      $('[data-pview-request]', pviewBody).addEventListener('click', () => openMail('supply'));
+      pviewBody.innerHTML = V.html(i);
+      $('[data-pview-request]', pviewBody).addEventListener('click', () => V.request(i));
       const page = $('.pview__page', pviewBody);
       if (dir && !reduced) {
         page.style.setProperty('--dir', dir > 0 ? '40px' : '-40px');
@@ -669,16 +790,22 @@
     }
   }
 
-  function openProject(i, opts = {}) {
-    i = ((i % PROJECT_COUNT) + PROJECT_COUNT) % PROJECT_COUNT;
+  function openView(kind, i, opts = {}) {
+    const V = VIEWS[kind];
+    const count = V.count();
+    if (!count) return;
+    i = ((i % count) + count) % count;
     const wasOpen = !pview.hidden;
-    const dir = wasOpen && currentProject !== i ? (opts.dir || (i > currentProject ? 1 : -1)) : 0;
+    const sameKind = wasOpen && viewKind === kind;
+    const dir = sameKind && currentProject !== i ? (opts.dir || (i > currentProject ? 1 : -1)) : 0;
+    if (viewKind !== kind) setViewLabels(kind);
+    viewKind = kind;
     currentProject = i;
     renderProject(i, dir);
-    const hash = `#project-${i + 1}`;
+    const hash = V.hash(i);
     if (opts.push !== false && location.hash !== hash) {
-      if (wasOpen) history.replaceState({ project: i }, '', hash);
-      else { history.pushState({ project: i }, '', hash); pushedProject = true; }
+      if (wasOpen) history.replaceState({ view: kind, i }, '', hash);
+      else { history.pushState({ view: kind, i }, '', hash); pushedProject = true; }
     }
     if (!wasOpen) {
       projectReturnFocus = document.activeElement;
@@ -689,6 +816,8 @@
       setTimeout(() => $('.pview__back', pview).focus({ preventScroll: true }), 50);
     }
   }
+  const openProject = (i, opts) => openView('project', i, opts);
+  const step = (d) => openView(viewKind, currentProject + d, { dir: d });
 
   function hideProject() {
     if (pview.hidden) return;
@@ -701,9 +830,9 @@
   }
 
   function closeProject() {
-    if (pushedProject && history.state && history.state.project !== undefined) {
+    if (pushedProject && history.state && history.state.view) {
       pushedProject = false;
-      history.back(); // уберёт #project-N, popstate закроет страницу
+      history.back(); // уберёт #project-N / #partner-id, popstate закроет страницу
     } else {
       history.replaceState(null, '', location.pathname + location.search);
       hideProject();
@@ -716,14 +845,14 @@
     card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
   });
   $$('[data-pclose]', pview).forEach((b) => b.addEventListener('click', closeProject));
-  $('#pview-prev').addEventListener('click', () => openProject(currentProject - 1, { dir: -1 }));
-  $('#pview-next').addEventListener('click', () => openProject(currentProject + 1, { dir: 1 }));
+  $('#pview-prev').addEventListener('click', () => step(-1));
+  $('#pview-next').addEventListener('click', () => step(1));
 
   document.addEventListener('keydown', (e) => {
     if (pview.hidden || !mail.hidden) return;
     if (e.key === 'Escape') closeProject();
-    else if (e.key === 'ArrowLeft') openProject(currentProject - 1, { dir: -1 });
-    else if (e.key === 'ArrowRight') openProject(currentProject + 1, { dir: 1 });
+    else if (e.key === 'ArrowLeft') step(-1);
+    else if (e.key === 'ArrowRight') step(1);
   });
 
   // свайп влево/вправо на телефоне
@@ -734,23 +863,25 @@
     const dx = e.changedTouches[0].clientX - touchX;
     const dy = e.changedTouches[0].clientY - touchY;
     touchX = null;
-    if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) openProject(currentProject + (dx < 0 ? 1 : -1), { dir: dx < 0 ? 1 : -1 });
+    if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) step(dx < 0 ? 1 : -1);
   }, { passive: true });
 
-  // адрес #project-N: «Назад»/«Вперёд» в браузере и прямые ссылки
+  // адрес #project-N / #partner-id: «Назад»/«Вперёд» в браузере и прямые ссылки
   function syncFromHash() {
-    const m = /^#project-(\d+)$/.exec(location.hash);
-    if (m && Number(m[1]) >= 1 && Number(m[1]) <= PROJECT_COUNT) openProject(Number(m[1]) - 1, { push: false });
-    else hideProject();
+    for (const kind of Object.keys(VIEWS)) {
+      const i = VIEWS[kind].parse(location.hash);
+      if (i >= 0) { openView(kind, i, { push: false }); return; }
+    }
+    hideProject();
   }
   window.addEventListener('popstate', syncFromHash);
-  if (/^#project-\d+$/.test(location.hash)) {
-    // открыли по прямой ссылке — показываем после заставки
+  if (/^#(project|partner)-[\w-]+$/.test(location.hash)) {
+    // открыли по прямой ссылке — показываем после заставки (и после загрузки логотипов)
     const waitReady = setInterval(() => {
-      if (document.body.classList.contains('is-ready')) { clearInterval(waitReady); syncFromHash(); }
+      if (document.body.classList.contains('is-ready')) { clearInterval(waitReady); partnersReady.finally(syncFromHash); }
     }, 100);
   }
 
-  // смена языка — перерисовать открытый проект
+  // смена языка — перерисовать открытую страницу
   document.addEventListener('ctgj:lang', () => { if (currentProject >= 0) renderProject(currentProject, 0); });
 })();
