@@ -556,6 +556,7 @@
     { id: 'yisite', name: 'Yisite', photo: 'img/partners/yisite.jpg', fit: 'blur' },
     { id: 'snf', name: 'SNF', photo: 'img/partners/snf.jpg', fit: 'blur' },
     { id: 'sunresin', name: 'Sunresin', photo: 'img/partners/sunresin.jpg' },
+    { id: 'ddsy', name: 'DDSY', photo: 'img/partners/ddsy.jpg', fit: 'blur' },
   ];
   const partnerLogos = {}; // id → файл логотипа из partners.json
   const partnerId = (file) => file.replace(/\.[^.]+$/, '').replace(/^\d+[\s._-]*/, '').toLowerCase();
@@ -649,8 +650,7 @@
     { src: 'img/projects/p3.jpg', fit: 'contain' }, // рендер насоса на белом фоне — не обрезать
     { src: 'img/projects/p4.jpg' },
     { src: 'img/projects/p5.jpg' },
-    // временное фото до снимков от заказчика
-    { src: 'img/projects/p6.jpg', credit: '5oclockhustle, CC BY-SA 4.0', link: 'https://commons.wikimedia.org/wiki/File:Metal_being_poured_during_the_investment_casting_process..jpg' },
+    { src: 'img/projects/p6.jpg', fit: 'contain' }, // отливки DDSY на белом фоне (с сайта ddsyzz.com)
     { src: 'img/projects/p7.jpg', fit: 'blur' }, // небольшое фото брикетов из презентации SNF
   ];
 
