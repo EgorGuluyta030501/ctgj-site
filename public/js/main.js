@@ -565,7 +565,6 @@
   const partnersReady = (async function loadPartners() {
     const section = $('#partners');
     const grid = $('#partners-grid');
-    const moreBtn = $('#partners-more');
     if (!section || !grid) return;
     let list = [];
     try {
@@ -574,21 +573,37 @@
     } catch (e) { /* нет списка — раздел остаётся скрытым */ }
     if (!Array.isArray(list) || !list.length) return;
 
-    const LIMIT = 15; // сколько показываем сразу; остальные — по кнопке
-    grid.innerHTML = list.map((p, i) => {
+    // плитка: логотип + короткая подпись (направление партнёра, ключ ptn.<id>.tag)
+    const tileHtml = (p, i, clone) => {
       const id = partnerId(p.file);
-      partnerLogos[id] = p.file;
       const idx = P_INFO.findIndex((x) => x.id === id);
+      const cap = idx >= 0 ? `ptn.${id}.tag` : '';
+      const attrs = clone ? ' aria-hidden="true"' : '';
       const link = idx >= 0
-        ? ` is-link" role="button" tabindex="0" data-partner="${idx}" aria-label="${escapeHtml(P_INFO[idx].name)}`
-        : '';
+        ? ` is-link" role="button" tabindex="${clone ? -1 : 0}" data-partner="${idx}"${clone ? '' : ` aria-label="${escapeHtml(P_INFO[idx].name)}"`}`
+        : '"';
       return `
-      <li class="partner${i >= LIMIT ? ' is-hidden' : ''}${link}" data-reveal style="--i:${i % 10}">
-        <img src="партнеры/${encodeURIComponent(p.file)}" alt="${escapeHtml(p.name)}" title="${escapeHtml(p.name)}" loading="lazy">
+      <li class="partner${link}${attrs} style="--i:${i % 10}">
+        <span class="partner__logo"><img src="партнеры/${encodeURIComponent(p.file)}" alt="${clone ? '' : escapeHtml(p.name)}"></span>
+        ${cap ? `<span class="partner__cap" data-i18n="${cap}">${escapeHtml(t(cap))}</span>` : ''}
         ${idx >= 0 ? '<i class="partner__go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></i>' : ''}
       </li>`;
-    }).join('');
+    };
+    list.forEach((p) => { partnerLogos[partnerId(p.file)] = p.file; });
+    // если партнёров мало, повторяем набор, чтобы лента была шире экрана и не было пустоты
+    let set = list.slice();
+    while (set.length < 8) set = set.concat(list);
+    // вторая копия нужна для бесшовного круга: лента сдвигается ровно на половину своей длины
+    grid.innerHTML = set.map((p, i) => tileHtml(p, i, i >= list.length)).join('')
+      + set.map((p, i) => tileHtml(p, i, true)).join('');
     section.hidden = false;
+
+    // скорость постоянная (~45 px/с) при любой ширине плиток и числе партнёров
+    const marquee = $('#partners-marquee');
+    const setSpeed = () => grid.style.setProperty('--dur', `${Math.max(grid.scrollWidth / 2 / 45, 12)}s`);
+    setSpeed();
+    window.addEventListener('resize', setSpeed);
+    $$('img', grid).forEach((img) => img.addEventListener('load', setSpeed, { once: true }));
 
     // клик по логотипу — страница партнёра
     const openTile = (e) => {
@@ -609,28 +624,21 @@
       tile.style.setProperty('--my', `${e.clientY - rect.top}px`);
     });
 
+    // на телефоне наведения нет: касание ленты ставит её на паузу, через 3 с она едет дальше
+    let resume = 0;
+    marquee.addEventListener('touchstart', () => {
+      marquee.classList.add('is-paused');
+      clearTimeout(resume);
+      resume = setTimeout(() => marquee.classList.remove('is-paused'), 3000);
+    }, { passive: true });
+
     // плавное появление: вешаем наблюдатель, если раздел уже инициализирован после заставки
     const io = new IntersectionObserver((entries) => entries.forEach((e) => {
       if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
     }), { threshold: 0.1 });
-    $$('[data-reveal], [data-split]', section).forEach((el, k) => {
-      if (el.classList.contains('partner')) el.style.setProperty('--d', Math.min((k % 5) * 0.06, 0.3) + 's');
-      io.observe(el);
-    });
-
-    if (list.length > LIMIT) {
-      moreBtn.hidden = false;
-      let open = false;
-      moreBtn.addEventListener('click', () => {
-        open = !open;
-        $$('.partner', grid).forEach((li, i) => {
-          if (i >= LIMIT) { li.classList.toggle('is-hidden', !open); if (open) li.classList.add('in'); }
-        });
-        moreBtn.textContent = t(open ? 'partners.showLess' : 'partners.showAll');
-        moreBtn.dataset.i18n = open ? 'partners.showLess' : 'partners.showAll';
-      });
-    }
+    $$('[data-reveal], [data-split]', section).forEach((el) => io.observe(el));
   })();
+
 
   /* ================= Страница проекта / партнёра ================= */
   // Открывается по клику на карточку проекта (#project-N) или логотип партнёра (#partner-id);

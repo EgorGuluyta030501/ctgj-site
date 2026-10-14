@@ -13,8 +13,6 @@ window.I18N = {
     'cta.request': 'Получить коммерческое предложение',
     'cta.short': 'Получить КП',
 
-    'loader.tagline': 'Снабжение и логистика из Китая',
-    'loader.skip': 'Пропустить',
 
     'hero.badge': 'Операционный центр в Китае',
     'hero.title_html': 'Комплексное снабжение <br>и логистика <span class="accent">из&nbsp;Китая</span>',
@@ -267,8 +265,6 @@ window.I18N = {
     'cta.request': 'Get a commercial proposal',
     'cta.short': 'Get a quote',
 
-    'loader.tagline': 'Sourcing and logistics from China',
-    'loader.skip': 'Skip',
 
     'hero.badge': 'Operations center in China',
     'hero.title_html': 'Integrated supply <br>and logistics <span class="accent">from&nbsp;China</span>',
@@ -519,8 +515,6 @@ window.I18N = {
     'cta.request': '获取商业报价',
     'cta.short': '获取报价',
 
-    'loader.tagline': '中国采购与物流',
-    'loader.skip': '跳过',
 
     'hero.badge': '中国运营中心',
     'hero.title_html': '来自<span class="accent">中国</span>的<br>综合供应与物流',

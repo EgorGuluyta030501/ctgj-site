@@ -886,24 +886,47 @@ body.is-ready [data-hero]:nth-child(5) { transition-delay: 0.4s; }
 .partners__head { justify-content: center; }
 .partners__head::after { display: none; }
 .partners__text { text-align: center; color: var(--muted); font-size: 16px; margin: -12px auto 40px; max-width: 620px; }
-/* неполный последний ряд — по центру */
-.partners__grid { --cols: 5; list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
-.partners__grid > .partner { flex: 0 0 calc((100% - (var(--cols) - 1) * 14px) / var(--cols)); }
+/* бегущая строка на всю ширину экрана; края плавно растворяются */
+.partners__marquee {
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+  padding: 14px 0 26px; /* место для подъёма плитки и свечения при наведении */
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+}
+.partners__track {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  width: max-content;
+  animation: partnersRun var(--dur, 40s) linear infinite;
+}
+/* отступ — у каждой плитки справа (не gap), чтобы две половины ленты были строго одинаковыми */
+.partners__track > .partner { flex: 0 0 auto; margin-right: 16px; }
+.partners__marquee:hover .partners__track,
+.partners__marquee:focus-within .partners__track,
+.partners__marquee.is-paused .partners__track { animation-play-state: paused; }
+@keyframes partnersRun { to { transform: translateX(-50%); } }
 /* плитки светлые в обеих темах: так любые логотипы (цветные, на белом фоне, тёмные) смотрятся одинаково */
 /* плитка партнёра: цветной логотип, свет за курсором, бегущая рамка, периодический блик */
 @property --spin { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
 .partner {
   --tile: #fbf8f2;
   position: relative;
-  aspect-ratio: 16 / 9;
+  width: 250px;
   border-radius: 14px;
   border: 1.5px solid transparent;
   background:
     linear-gradient(var(--tile), var(--tile)) padding-box,
     linear-gradient(rgba(31, 25, 19, 0.1), rgba(31, 25, 19, 0.1)) border-box;
   display: grid;
-  place-items: center;
-  padding: 18px 26px;
+  grid-template-rows: 78px auto;
+  justify-items: center;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 22px 16px;
   overflow: hidden;
   isolation: isolate;
   transition: transform 0.45s var(--ease), box-shadow 0.45s var(--ease);
@@ -934,7 +957,24 @@ body.is-ready [data-hero]:nth-child(5) { transition-delay: 0.4s; }
   0%, 70% { transform: translateX(-120%); }
   85%, 100% { transform: translateX(120%); }
 }
+.partner__logo { display: grid; place-items: center; width: 100%; height: 100%; }
 .partner img { max-width: 100%; max-height: 64px; width: auto; height: auto; object-fit: contain; transition: transform 0.5s var(--ease), filter 0.5s; }
+/* подпись под логотипом: чем занимается партнёр (плитка светлая в обеих темах — текст тёмный) */
+.partner__cap {
+  width: 100%;
+  padding-top: 10px;
+  border-top: 1px solid rgba(31, 25, 19, 0.1);
+  text-align: center;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+  color: #5c4f42;
+  min-height: calc(2 * 1.3em + 10px); /* две строки — плитки одной высоты */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .partner:hover {
   transform: translateY(-5px);
   /* золото-красная рамка, бегущая по кругу */
@@ -948,14 +988,13 @@ body.is-ready [data-hero]:nth-child(5) { transition-delay: 0.4s; }
 @keyframes partnerSpin { to { --spin: 360deg; } }
 .partner:hover::before { opacity: 1; }
 .partner:hover img { transform: scale(1.07); filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.12)); }
-.partner.is-hidden { display: none; }
 /* логотип со своей страницей: курсор-ссылка и стрелка в углу */
 .partner.is-link { cursor: pointer; }
-.partner.is-link:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.partner.is-link:focus-visible { outline: 2px solid var(--gold); outline-offset: -3px; }
 .partner__go {
   position: absolute;
   right: 10px;
-  bottom: 10px;
+  top: 10px;
   width: 26px;
   height: 26px;
   border-radius: 50%;
@@ -971,14 +1010,19 @@ body.is-ready [data-hero]:nth-child(5) { transition-delay: 0.4s; }
 .partner.is-link:hover .partner__go,
 .partner.is-link:focus-visible .partner__go { opacity: 1; transform: none; }
 /* на телефоне наведения нет — стрелка видна всегда, но приглушённо */
-@media (hover: none) { .partner__go { opacity: 0.85; transform: none; width: 22px; height: 22px; right: 7px; bottom: 7px; } }
-.partners__more { display: flex; justify-content: center; margin-top: 32px; }
-@media (max-width: 1100px) { .partners__grid { --cols: 3; } }
+@media (hover: none) { .partner__go { opacity: 0.85; transform: none; width: 22px; height: 22px; right: 7px; top: 7px; } }
 @media (max-width: 600px) {
-  .partners__grid { --cols: 2; gap: 10px; }
-  .partners__grid > .partner { flex-basis: calc((100% - 10px) / 2); }
-  .partner { padding: 14px 16px; }
-  .partner img { max-height: 48px; }
+  .partners__marquee { -webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); }
+  .partners__track > .partner { margin-right: 10px; }
+  .partner { width: 190px; grid-template-rows: 58px auto; padding: 14px 14px 12px; gap: 8px; }
+  .partner img { max-height: 46px; }
+  .partner__cap { font-size: 11.5px; padding-top: 8px; }
+}
+/* без анимаций: лента стоит, её можно листать пальцем/колёсиком; вторая копия не нужна */
+@media (prefers-reduced-motion: reduce) {
+  .partners__marquee { overflow-x: auto; -webkit-mask-image: none; mask-image: none; }
+  .partners__track { animation: none; padding: 0 var(--gutter, 16px); }
+  .partners__track > [aria-hidden='true'] { display: none; }
 }
 
 /* ============================================================
