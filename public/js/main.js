@@ -552,7 +552,7 @@
   // Тексты — в i18n.js (ключи ptn.<id>.*). Контакты производителей намеренно не показываем: все запросы идут через CTGJ.
   // Логотип без записи здесь просто выводится в сетке, без перехода на страницу.
   const P_INFO = [
-    { id: 'fulaier', name: 'Fulaier', photo: 'img/partners/fulaier.jpg' },
+    { id: 'fulaier', name: 'Fulaier', photo: 'img/partners/fulaier.jpg', fit: 'contain' }, // пресс для брикетов на белом (как в проекте 1)
     // fit: 'contain' — предмет на белом фоне; 'blur' — широкое фото целиком на размытом фоне; без fit — фото на всю панель
     { id: 'shitian', name: 'Shitian', photo: 'img/partners/shitian.jpg', fit: 'blur' },
     { id: 'dbd-power', name: 'DBD Power', photo: 'img/partners/dbd-power.jpg' },
@@ -762,6 +762,12 @@
 
   // url() внутри CSS-переменной браузер считает от файла style.css (css/…), поэтому передаём полный адрес
   const absUrl = (src) => new URL(src, location.href).href;
+  // фото кешируются браузером на час: метка версии из адреса main.js (?v=…) заставляет взять новое после замены
+  const ASSET_V = (() => {
+    const el = document.querySelector('script[src*="js/main.js"]');
+    try { return el ? new URL(el.src).searchParams.get('v') || '' : ''; } catch (e) { return ''; }
+  })();
+  const withV = (src) => (ASSET_V ? `${src}?v=${ASSET_V}` : src);
 
   function projectHtml(i) {
     const k = `prj.${i + 1}`;
@@ -779,8 +785,8 @@
           <p class="pview__lead">${e(k + '.task')}</p>
         </header>
         <section class="pview__split">
-          <figure class="pview__photo${photo.fit ? ` pview__photo--${photo.fit}` : ''}"${photo.fit === 'blur' ? ` style="--img:url('${absUrl(photo.src)}')"` : ''}>
-            ${photo.src ? `<img src="${photo.src}" alt="${e(k + '.t')}">` : ''}
+          <figure class="pview__photo${photo.fit ? ` pview__photo--${photo.fit}` : ''}"${photo.fit === 'blur' ? ` style="--img:url('${absUrl(withV(photo.src))}')"` : ''}>
+            ${photo.src ? `<img src="${withV(photo.src)}" alt="${e(k + '.t')}">` : ''}
             ${credit}
             <div class="pview__result">
               <h3>${e('prj.result')}</h3>
@@ -821,8 +827,8 @@
           <p class="pview__lead">${e(k + '.lead')}</p>
         </header>
         <section class="pview__split">
-          <figure class="pview__photo${p.fit ? ` pview__photo--${p.fit}` : ''}"${p.fit === 'blur' ? ` style="--img:url('${absUrl(p.photo)}')"` : ''}>
-            <img src="${p.photo}" alt="${escapeHtml(p.name)}">
+          <figure class="pview__photo${p.fit ? ` pview__photo--${p.fit}` : ''}"${p.fit === 'blur' ? ` style="--img:url('${absUrl(withV(p.photo))}')"` : ''}>
+            <img src="${withV(p.photo)}" alt="${escapeHtml(p.name)}">
             <div class="pview__result">
               <h3>${e('ptn.via')}</h3>
               <p>${e('ptn.viaText')}</p>
