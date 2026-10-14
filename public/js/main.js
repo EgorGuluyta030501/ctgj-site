@@ -550,10 +550,10 @@
     // fit: 'contain' — предмет на белом фоне; 'blur' — широкое фото целиком на размытом фоне; без fit — фото на всю панель
     { id: 'shitian', name: 'Shitian', photo: 'img/partners/shitian.jpg', fit: 'blur' },
     { id: 'dbd-power', name: 'DBD Power', photo: 'img/partners/dbd-power.jpg' },
-    { id: 'huxi', name: 'HUXI', photo: 'img/partners/huxi.jpg', fit: 'blur' },
+    { id: 'huxi', name: 'HUXI', photo: 'img/partners/huxi.jpg' }, // приборы HUXI в работе (huxilab.com)
     { id: 'shanghai-sunshine-pump', name: 'Shanghai Sunshine Pump', photo: 'img/partners/shanghai-sunshine-pump.jpg', fit: 'contain' },
     { id: 'innofluid', name: 'Innofluid', photo: 'img/partners/innofluid.jpg', fit: 'contain' },
-    { id: 'yisite', name: 'Yisite', photo: 'img/partners/yisite.jpg', fit: 'blur' },
+    { id: 'yisite', name: 'Yisite', photo: 'img/partners/yisite.jpg', fit: 'contain' }, // рендер WDW с сайта jn-est.com
     { id: 'snf', name: 'SNF', photo: 'img/partners/snf.jpg', fit: 'blur' },
     { id: 'sunresin', name: 'Sunresin', photo: 'img/partners/sunresin.jpg' },
     { id: 'ddsy', name: 'DDSY', photo: 'img/partners/ddsy.jpg', fit: 'blur' },
@@ -656,8 +656,10 @@
     { src: 'img/projects/p1.jpg' },
     { src: 'img/projects/p2.jpg' },
     { src: 'img/projects/p3.jpg', fit: 'contain' }, // рендер насоса на белом фоне — не обрезать
-    { src: 'img/projects/p4.jpg' },
-    { src: 'img/projects/p5.jpg' },
+    // ротационный испаритель — из задачи проекта; фото с Викисклада
+    { src: 'img/projects/p4.jpg', credit: 'Y Chen, CC BY-SA 4.0', link: 'https://commons.wikimedia.org/wiki/File:%E6%97%8B%E8%BD%AC%E8%92%B8%E5%8F%91%E4%BB%AA.jpg' },
+    // универсальная испытательная машина 300 кН на белом фоне
+    { src: 'img/projects/p5.jpg', fit: 'contain', credit: 'Ganitz, CC BY-SA 4.0', link: 'https://commons.wikimedia.org/wiki/File:Modern_universal_testing_machine.jpg' },
     { src: 'img/projects/p6.jpg', fit: 'contain' }, // отливки DDSY на белом фоне (с сайта ddsyzz.com)
     { src: 'img/projects/p7.jpg', fit: 'blur' }, // небольшое фото брикетов из презентации SNF
   ];
