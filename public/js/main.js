@@ -554,6 +554,8 @@
     { id: 'shanghai-sunshine-pump', name: 'Shanghai Sunshine Pump', photo: 'img/partners/shanghai-sunshine-pump.jpg', fit: 'contain' },
     { id: 'innofluid', name: 'Innofluid', photo: 'img/partners/innofluid.jpg', fit: 'contain' },
     { id: 'yisite', name: 'Yisite', photo: 'img/partners/yisite.jpg', fit: 'blur' },
+    { id: 'snf', name: 'SNF', photo: 'img/partners/snf.jpg', fit: 'blur' },
+    { id: 'sunresin', name: 'Sunresin', photo: 'img/partners/sunresin.jpg' },
   ];
   const partnerLogos = {}; // id → файл логотипа из partners.json
   const partnerId = (file) => file.replace(/\.[^.]+$/, '').replace(/^\d+[\s._-]*/, '').toLowerCase();
@@ -647,7 +649,13 @@
     { src: 'img/projects/p3.jpg', fit: 'contain' }, // рендер насоса на белом фоне — не обрезать
     { src: 'img/projects/p4.jpg' },
     { src: 'img/projects/p5.jpg' },
+    // временное фото до снимков от заказчика
+    { src: 'img/projects/p6.jpg', credit: '5oclockhustle, CC BY-SA 4.0', link: 'https://commons.wikimedia.org/wiki/File:Metal_being_poured_during_the_investment_casting_process..jpg' },
+    { src: 'img/projects/p7.jpg', fit: 'blur' }, // небольшое фото брикетов из презентации SNF
   ];
+
+  // url() внутри CSS-переменной браузер считает от файла style.css (css/…), поэтому передаём полный адрес
+  const absUrl = (src) => new URL(src, location.href).href;
 
   function projectHtml(i) {
     const k = `prj.${i + 1}`;
@@ -665,7 +673,7 @@
           <p class="pview__lead">${e(k + '.task')}</p>
         </header>
         <section class="pview__split">
-          <figure class="pview__photo${photo.fit === 'contain' ? ' pview__photo--contain' : ''}">
+          <figure class="pview__photo${photo.fit ? ` pview__photo--${photo.fit}` : ''}"${photo.fit === 'blur' ? ` style="--img:url('${absUrl(photo.src)}')"` : ''}>
             ${photo.src ? `<img src="${photo.src}" alt="${e(k + '.t')}">` : ''}
             ${credit}
             <div class="pview__result">
@@ -707,7 +715,7 @@
           <p class="pview__lead">${e(k + '.lead')}</p>
         </header>
         <section class="pview__split">
-          <figure class="pview__photo${p.fit ? ` pview__photo--${p.fit}` : ''}"${p.fit === 'blur' ? ` style="--img:url('${p.photo}')"` : ''}>
+          <figure class="pview__photo${p.fit ? ` pview__photo--${p.fit}` : ''}"${p.fit === 'blur' ? ` style="--img:url('${absUrl(p.photo)}')"` : ''}>
             <img src="${p.photo}" alt="${escapeHtml(p.name)}">
             <div class="pview__result">
               <h3>${e('ptn.via')}</h3>
