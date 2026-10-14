@@ -653,11 +653,10 @@
 
   // фото проектов (img/projects); если фото под CC BY — добавить credit и link, подпись выведется на фото
   const P_PHOTOS = [
-    { src: 'img/projects/p1.jpg' },
+    { src: 'img/projects/p1.jpg', fit: 'contain' }, // пресс для брикетов на белом фоне (фото заказчика)
     { src: 'img/projects/p2.jpg' },
     { src: 'img/projects/p3.jpg', fit: 'contain' }, // рендер насоса на белом фоне — не обрезать
-    // ротационный испаритель — из задачи проекта; фото с Викисклада
-    { src: 'img/projects/p4.jpg', credit: 'Y Chen, CC BY-SA 4.0', link: 'https://commons.wikimedia.org/wiki/File:%E6%97%8B%E8%BD%AC%E8%92%B8%E5%8F%91%E4%BB%AA.jpg' },
+    { src: 'img/projects/p4.jpg' }, // микроскоп и колба (фото заказчика)
     // универсальная испытательная машина 300 кН на белом фоне
     { src: 'img/projects/p5.jpg', fit: 'contain', credit: 'Ganitz, CC BY-SA 4.0', link: 'https://commons.wikimedia.org/wiki/File:Modern_universal_testing_machine.jpg' },
     { src: 'img/projects/p6.jpg', fit: 'contain' }, // отливки DDSY на белом фоне (с сайта ddsyzz.com)
