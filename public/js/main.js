@@ -130,6 +130,12 @@
   const seenIntro = (() => { try { return sessionStorage.getItem('ctgj-intro'); } catch (e) { return null; } })();
   // ?intro=0 — пропустить заставку (удобно при правках)
   const skipIntro = new URLSearchParams(location.search).get('intro') === '0';
+  // параметр срабатывает один раз и сразу убирается из адреса: после обновления страницы заставка снова есть
+  if (skipIntro) {
+    const u = new URL(location.href);
+    u.searchParams.delete('intro');
+    history.replaceState(history.state, '', u.pathname + u.search + u.hash);
+  }
   if (reduced || skipIntro || !window.SkyScene) {
     loader.classList.add('show-brand');
     setTimeout(finishLoader, skipIntro ? 0 : 900);
@@ -598,12 +604,108 @@
       + set.map((p, i) => tileHtml(p, i, true)).join('');
     section.hidden = false;
 
-    // скорость постоянная (~45 px/с) при любой ширине плиток и числе партнёров
+    // лента едет сама (~45 px/с); стрелки, перетаскивание, свайп и горизонтальная прокрутка двигают её вручную
     const marquee = $('#partners-marquee');
-    const setSpeed = () => grid.style.setProperty('--dur', `${Math.max(grid.scrollWidth / 2 / 45, 12)}s`);
-    setSpeed();
-    window.addEventListener('resize', setSpeed);
-    $$('img', grid).forEach((img) => img.addEventListener('load', setSpeed, { once: true }));
+    const SPEED = reduced ? 0 : 45;
+    let x = 0;          // сдвиг ленты, всегда в пределах (-half, 0]
+    let half = 0;       // длина одного набора плиток — через неё лента замыкается в круг
+    let glide = 0;      // остаток плавного сдвига после нажатия стрелки
+    let holdUntil = 0;  // после ручного листания лента немного стоит, чтобы успеть рассмотреть
+    let hover = false;
+    let focused = false;
+    let dragging = false;
+    let visible = false;
+    let raf = 0;
+    let last = 0;
+    const measure = () => { half = grid.scrollWidth / 2; };
+    measure();
+    window.addEventListener('resize', measure);
+    $$('img', grid).forEach((img) => img.addEventListener('load', measure, { once: true }));
+    const place = () => {
+      if (half) { x %= half; if (x > 0) x -= half; }
+      grid.style.transform = `translate3d(${x}px, 0, 0)`;
+    };
+    const hold = (ms = 4000) => { holdUntil = performance.now() + ms; };
+    const frame = (now) => {
+      const dt = Math.min((now - (last || now)) / 1000, 0.1);
+      last = now;
+      if (glide) {
+        const d = Math.abs(glide) < 0.5 ? glide : glide * (1 - Math.exp(-dt * 9));
+        x += d;
+        glide -= d;
+      } else if (!dragging && !hover && !focused && now > holdUntil) {
+        x -= SPEED * dt;
+      }
+      place();
+      raf = visible ? requestAnimationFrame(frame) : 0;
+    };
+    const run = () => { if (!raf && visible) { last = 0; raf = requestAnimationFrame(frame); } };
+    // за пределами экрана лента не анимируется
+    new IntersectionObserver(([e]) => { visible = e.isIntersecting; run(); }).observe(marquee);
+
+    // стрелки: сдвиг почти на ширину экрана (одна плитка остаётся для ориентира)
+    const tileStep = () => {
+      const tile = grid.firstElementChild;
+      return tile ? tile.offsetWidth + parseFloat(getComputedStyle(tile).marginRight) : 260;
+    };
+    const page = (dir) => {
+      const n = Math.max(1, Math.floor(marquee.clientWidth / tileStep()) - 1);
+      glide += -dir * n * tileStep();
+      hold();
+      run();
+    };
+    $('#ptn-prev').addEventListener('click', () => page(-1));
+    $('#ptn-next').addEventListener('click', () => page(1));
+
+    // мышь: пауза при наведении; клавиатура: пауза, пока фокус на плитке
+    marquee.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') hover = true; });
+    marquee.addEventListener('pointerleave', () => { hover = false; });
+    marquee.addEventListener('focusin', () => { focused = true; });
+    marquee.addEventListener('focusout', () => { focused = false; });
+
+    // перетаскивание мышью и свайп пальцем; вертикальную прокрутку страницы не трогаем (touch-action: pan-y)
+    let dragFrom = null;
+    let moved = false;
+    marquee.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      dragFrom = { px: e.clientX, x };
+      moved = false;
+      glide = 0;
+    });
+    marquee.addEventListener('pointermove', (e) => {
+      if (!dragFrom) return;
+      const dx = e.clientX - dragFrom.px;
+      if (!moved && Math.abs(dx) > 6) {
+        moved = true;
+        dragging = true;
+        marquee.classList.add('is-dragging');
+        marquee.setPointerCapture(e.pointerId);
+      }
+      if (moved) { x = dragFrom.x + dx; place(); }
+    });
+    const dragEnd = () => {
+      if (!dragFrom) return;
+      dragFrom = null;
+      if (dragging) { dragging = false; marquee.classList.remove('is-dragging'); hold(); }
+    };
+    marquee.addEventListener('pointerup', dragEnd);
+    marquee.addEventListener('pointercancel', dragEnd);
+    // после перетаскивания отпускание кнопки — не клик по логотипу
+    marquee.addEventListener('click', (e) => {
+      if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; }
+    }, true);
+    marquee.addEventListener('dragstart', (e) => e.preventDefault()); // картинки не «утаскиваются»
+
+    // горизонтальная прокрутка тачпадом / Shift+колёсико
+    marquee.addEventListener('wheel', (e) => {
+      const dx = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : (e.shiftKey ? e.deltaY : 0);
+      if (!dx) return;
+      e.preventDefault();
+      glide = 0;
+      x -= dx;
+      place();
+      hold();
+    }, { passive: false });
 
     // клик по логотипу — страница партнёра
     const openTile = (e) => {
@@ -624,13 +726,8 @@
       tile.style.setProperty('--my', `${e.clientY - rect.top}px`);
     });
 
-    // на телефоне наведения нет: касание ленты ставит её на паузу, через 3 с она едет дальше
-    let resume = 0;
-    marquee.addEventListener('touchstart', () => {
-      marquee.classList.add('is-paused');
-      clearTimeout(resume);
-      resume = setTimeout(() => marquee.classList.remove('is-paused'), 3000);
-    }, { passive: true });
+    // на телефоне наведения нет: касание ленты ставит её на паузу, потом она едет дальше
+    marquee.addEventListener('touchstart', () => hold(3000), { passive: true });
 
     // плавное появление: вешаем наблюдатель, если раздел уже инициализирован после заставки
     const io = new IntersectionObserver((entries) => entries.forEach((e) => {
